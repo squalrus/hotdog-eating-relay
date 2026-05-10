@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useApp } from '../context/AppContext'
 import CheckerboardStripe from './CheckerboardStripe'
 
 const navLinks = [
@@ -12,6 +13,16 @@ const navLinks = [
 ]
 
 export default function AppShell() {
+  const { activeEvent } = useApp()
+
+  const eventYear = activeEvent
+    ? new Date(activeEvent.date).getUTCFullYear().toString()
+    : null
+
+  const subtitle = activeEvent
+    ? `${activeEvent.venue} · ${activeEvent.context}`
+    : 'No active event'
+
   return (
     <div className="min-h-screen flex flex-col">
       <CheckerboardStripe />
@@ -22,13 +33,13 @@ export default function AppShell() {
           <h1 className="font-display text-2xl sm:text-3xl text-orange leading-none tracking-wide">
             Hot Dog Eating Relay
           </h1>
-          <p className="text-xs text-cream/60 mt-0.5">
-            @ Halcyon Brewing &middot; Seattle Beer Week
-          </p>
+          <p className="text-xs text-cream/60 mt-0.5">{subtitle}</p>
         </div>
-        <span className="bg-olive text-cream text-xs font-bold px-2 py-1 rounded font-body">
-          2026
-        </span>
+        {eventYear && (
+          <span className="bg-olive text-cream text-xs font-bold px-2 py-1 rounded font-body">
+            {eventYear}
+          </span>
+        )}
       </header>
 
       <nav className="bg-dark-light border-b border-olive/40 px-4 overflow-x-auto">

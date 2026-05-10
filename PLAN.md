@@ -78,6 +78,7 @@ Team {
   name: string
   members: [Member, Member, Member]
   teamTime?: number      // seconds; null if not yet entered
+  isBrewer: boolean      // true = brewery staff team; competes but ineligible for prizes
 }
 
 Member {
@@ -143,9 +144,10 @@ Prize {
     `UPDATE_TEAM`, `DELETE_TEAM`, `SET_TIME`, `ADD_SPONSOR`, `REMOVE_SPONSOR`,
     `REORDER_SPONSORS`, `SET_PRIZES`
 - Pure utility functions:
-  - `rankTeams(teams[])` — sort by time ascending, DNS teams at bottom
+  - `rankTeams(teams[])` — sort by time ascending, DNS teams at bottom; brewer teams always sort after eligible teams regardless of time
   - `formatTime(seconds)` → `"MM:SS"` display string
   - `parseTime(string)` → seconds (handles `MM:SS` input)
+- `src/lib/rules.ts` — `CONTEST_RULES` string array (static, not per-event)
 
 ### Step 3 — App Shell & Navigation
 - Sticky top bar: checkerboard stripe + "Hot Dog Eating Relay" + active event year badge
@@ -168,7 +170,8 @@ Prize {
 
 ### Step 5 — Team Manager (`/teams`)
 - Card grid of all teams in the active/upcoming event
-- "Add Team" form: team name + 3 member name fields
+- "Add Team" form: team name + 3 member name fields + "Brewer team" toggle
+- Brewer teams are brewery staff competing for fun — they appear on the roster and scoreboard but are **not eligible for prizes**; shown with a "🍺 Brewers" badge
 - Inline edit and delete per team
 - Validation: all 4 name fields required
 - Warning before delete if team has times recorded
@@ -177,7 +180,12 @@ Prize {
 ### Step 6 — Team Roster (`/roster`) — Pre-Event Hype View
 - Public-facing, designed to be projected or shared as a link
 - Shows: event name, date, venue, featured beer badge, team list
-- Each team card: team name + 3 member names, styled like a tournament bracket card
+- Each team card: team name + 3 member names, styled like a tournament bracket card; brewer teams show a "🍺 Brewers" badge
+- Contest rules displayed prominently (sourced from `CONTEST_RULES` in `src/lib/rules.ts`):
+  - Finish both the hotdog AND the beer before the next person starts
+  - Show an empty mouth to judges before tagging your teammate
+  - Hands off beer and hotdog until it is your turn
+  - No pre-soaking hotdogs before your turn
 - Sponsor logos in the footer (same strip as scoreboard)
 - No times shown — this is the "who's competing" view
 - Retro poster aesthetic: large type, checkerboard accents, star decorations
@@ -185,16 +193,20 @@ Prize {
 
 ### Step 7 — Results Entry (`/results`)
 - One row per team, expandable to show individual member rows
+- Brewer teams visually distinguished with a badge; can still have times entered
 - Team time: single `MM:SS` input
 - Individual times: three `MM:SS` inputs (optional — leave blank if not tracking)
 - Soft warning if individual times sum differs from team time by > 5 seconds
+- Contest rules shown in a collapsible sidebar or info panel as a judge reference
 - Auto-save to localStorage on blur; visual "Saved ✓" confirmation
 
 ### Step 8 — Scoreboard (`/`)
 - Dark background (`#2A2416`), large retro type (`Boogaloo` font)
 - Ranked table: **Place | Team Name | Members | Team Time | Individual Splits**
-- Medal row highlights: gold / silver / bronze for top 3
-- Prize badge next to winning rows
+- Prize-eligible teams ranked first by time; brewer teams ranked separately below with a "🍺 Brewers" section divider — they get their own ranking but no prize callouts
+- Medal row highlights: gold / silver / bronze apply only to prize-eligible teams
+- Prize badge next to winning eligible rows
+- "🍺 Brewers" badge on brewer team rows
 - DNS badge for teams with no time entered
 - Featured beer banner below the event header: "🍺 Tonight's Beer: [name]" + description
 - Sponsor logo strip in footer
