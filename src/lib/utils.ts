@@ -19,27 +19,32 @@ export function rankTeams(teams: Team[]): RankedTeams {
   }
 }
 
+// Formats float seconds as MM:SS.cc (centiseconds always shown for precision).
 export function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  const totalCs = Math.round(seconds * 100)
+  const cs = totalCs % 100
+  const totalSec = Math.floor(totalCs / 100)
+  const m = Math.floor(totalSec / 60)
+  const s = totalSec % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`
 }
 
-// Accepts "MM:SS" or raw seconds as a string. Returns seconds or null if invalid.
+// Accepts "MM:SS", "MM:SS.c", or "MM:SS.cc". Returns float seconds or null.
 export function parseTime(input: string): number | null {
   const trimmed = input.trim()
   if (!trimmed) return null
 
-  const colonMatch = trimmed.match(/^(\d+):(\d{2})$/)
-  if (colonMatch) {
-    const minutes = parseInt(colonMatch[1], 10)
-    const secs = parseInt(colonMatch[2], 10)
+  const match = trimmed.match(/^(\d+):(\d{2})(?:\.(\d{1,2}))?$/)
+  if (match) {
+    const minutes = parseInt(match[1], 10)
+    const secs = parseInt(match[2], 10)
     if (secs >= 60) return null
-    return minutes * 60 + secs
+    const cs = match[3] ? parseInt(match[3].padEnd(2, '0'), 10) : 0
+    return minutes * 60 + secs + cs / 100
   }
 
   const raw = Number(trimmed)
-  if (!isNaN(raw) && raw >= 0) return Math.round(raw)
+  if (!isNaN(raw) && raw >= 0) return raw
 
   return null
 }

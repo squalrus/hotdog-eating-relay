@@ -7,8 +7,9 @@ export interface Team {
   id: string
   name: string
   members: [Member, Member, Member]
-  teamTime?: number // seconds
-  isBrewer: boolean // brewer teams compete but are ineligible for prizes
+  teamTime?: number  // float seconds, supports centiseconds (e.g. 221.66)
+  isBrewer: boolean  // brewer teams compete but are ineligible for prizes
+  notes?: string     // scorekeeper annotations (e.g. rule clarifications)
 }
 
 export interface Sponsor {
