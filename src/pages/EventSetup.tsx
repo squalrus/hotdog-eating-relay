@@ -1,9 +1,9 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react'
-import { Plus, Trash2, ChevronUp, ChevronDown, Download, Archive } from 'lucide-react'
+import { useState, useRef, type FormEvent, type ChangeEvent } from 'react'
+import { Plus, Trash2, Download, Archive, GripVertical, Upload, ImageOff } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { exportEventJSON } from '../lib/exportImport'
 import { generateId } from '../lib/utils'
-import type { HotdogEvent, EventStatus } from '../types'
+import type { HotdogEvent, EventStatus, Sponsor } from '../types'
 
 // ---------------------------------------------------------------------------
 // Form state helpers
@@ -90,6 +90,122 @@ function TextInput({
 }
 
 // ---------------------------------------------------------------------------
+// Sponsor row (drag-and-drop + image upload)
+// ---------------------------------------------------------------------------
+
+const MAX_IMAGE_BYTES = 500 * 1024 // 500 KB
+
+function SponsorRow({
+  sponsor,
+  index,
+  total,
+  isDragging,
+  isDragOver,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  onUpload,
+  onRemoveImage,
+  onRemove,
+}: {
+  sponsor: Sponsor
+  index: number
+  total: number
+  isDragging: boolean
+  isDragOver: boolean
+  onDragStart: () => void
+  onDragOver: (e: React.DragEvent) => void
+  onDrop: () => void
+  onDragEnd: () => void
+  onUpload: () => void
+  onRemoveImage: () => void
+  onRemove: () => void
+}) {
+  return (
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      className={`flex items-center gap-2 bg-cream rounded-lg px-2 py-2 border-2 transition-all select-none ${
+        isDragging
+          ? 'opacity-40 border-olive/30'
+          : isDragOver
+            ? 'border-orange bg-orange/5'
+            : 'border-transparent'
+      }`}
+    >
+      {/* Drag handle */}
+      <div
+        className="text-dark/20 hover:text-dark/50 cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"
+        title="Drag to reorder"
+      >
+        <GripVertical size={16} />
+      </div>
+
+      {/* Thumbnail */}
+      <div className="w-9 h-9 rounded overflow-hidden flex-shrink-0 bg-dark/5 flex items-center justify-center">
+        {sponsor.imageData ? (
+          <img
+            src={sponsor.imageData}
+            alt={sponsor.name}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <span className="text-dark/20">
+            <ImageOff size={14} />
+          </span>
+        )}
+      </div>
+
+      {/* Name */}
+      <span className="flex-1 text-sm font-semibold text-dark truncate min-w-0">
+        {sponsor.name}
+      </span>
+
+      {/* Position indicator (screen-reader + small screens) */}
+      <span className="text-xs text-dark/20 tabular-nums flex-shrink-0">
+        {index + 1}/{total}
+      </span>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <button
+          type="button"
+          onClick={onUpload}
+          title={sponsor.imageData ? 'Replace logo image' : 'Upload logo image'}
+          className="p-1.5 rounded text-dark/40 hover:text-olive hover:bg-olive/10 transition-colors"
+        >
+          <Upload size={13} />
+        </button>
+
+        {sponsor.imageData && (
+          <button
+            type="button"
+            onClick={onRemoveImage}
+            title="Remove logo image"
+            className="p-1.5 rounded text-dark/30 hover:text-orange hover:bg-orange/10 transition-colors"
+          >
+            <ImageOff size={13} />
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={onRemove}
+          title="Remove sponsor"
+          className="p-1.5 rounded text-dark/30 hover:text-orange hover:bg-orange/10 transition-colors"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
 
@@ -107,6 +223,15 @@ export default function EventSetup() {
   const [newSponsorName, setNewSponsorName] = useState('')
   const [savedAt, setSavedAt] = useState<number | null>(null)
 
+  // Drag state
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+
+  // Image upload state
+  const [uploadForId, setUploadForId] = useState<string | null>(null)
+  const [imageWarning, setImageWarning] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const editingEvent =
     editingId && editingId !== 'new'
       ? (data.events.find((e) => e.id === editingId) ?? null)
@@ -120,12 +245,14 @@ export default function EventSetup() {
     setEditingId(id)
     setForm(eventToForm(ev))
     setSavedAt(null)
+    setImageWarning(null)
   }
 
   function startNew() {
     setEditingId('new')
     setForm(blankForm())
     setSavedAt(null)
+    setImageWarning(null)
   }
 
   // -- Form -----------------------------------------------------------------
@@ -183,21 +310,18 @@ export default function EventSetup() {
 
   function setStatus(status: EventStatus) {
     if (!editingId || editingId === 'new' || !editingEvent) return
-
     dispatch({ type: 'SET_EVENT_STATUS', id: editingId, status })
-
     if (status === 'active') {
       dispatch({ type: 'SET_ACTIVE_EVENT', id: editingId })
     } else if (data.activeEventId === editingId) {
       dispatch({ type: 'SET_ACTIVE_EVENT', id: null })
     }
-
     if (status === 'archived') {
       exportEventJSON({ ...editingEvent, status: 'archived' })
     }
   }
 
-  // -- Sponsors -------------------------------------------------------------
+  // -- Sponsors: basic ------------------------------------------------------
 
   function addSponsor() {
     if (!editingId || editingId === 'new' || !newSponsorName.trim()) return
@@ -214,20 +338,94 @@ export default function EventSetup() {
     dispatch({ type: 'REMOVE_SPONSOR', eventId: editingId, sponsorId })
   }
 
-  function moveSponsor(sponsorId: string, dir: 'up' | 'down') {
-    if (!editingEvent) return
+  function updateSponsors(sponsors: Sponsor[]) {
+    if (!editingId || editingId === 'new') return
+    dispatch({ type: 'REORDER_SPONSORS', eventId: editingId, sponsors })
+  }
+
+  // -- Sponsors: drag-to-reorder --------------------------------------------
+
+  function handleDragOver(e: React.DragEvent, targetId: string) {
+    e.preventDefault()
+    if (dragId !== targetId) setDragOverId(targetId)
+  }
+
+  function handleDrop(targetId: string) {
+    if (!editingEvent || !dragId || dragId === targetId) {
+      setDragId(null)
+      setDragOverId(null)
+      return
+    }
     const list = [...editingEvent.sponsors]
-    const idx = list.findIndex((s) => s.id === sponsorId)
-    const swap = dir === 'up' ? idx - 1 : idx + 1
-    if (swap < 0 || swap >= list.length) return
-    ;[list[idx], list[swap]] = [list[swap], list[idx]]
-    dispatch({ type: 'REORDER_SPONSORS', eventId: editingEvent.id, sponsors: list })
+    const from = list.findIndex((s) => s.id === dragId)
+    const to = list.findIndex((s) => s.id === targetId)
+    if (from < 0 || to < 0) return
+    const [item] = list.splice(from, 1)
+    list.splice(to, 0, item)
+    updateSponsors(list)
+    setDragId(null)
+    setDragOverId(null)
+  }
+
+  // -- Sponsors: image upload -----------------------------------------------
+
+  function openUpload(sponsorId: string) {
+    setUploadForId(sponsorId)
+    setImageWarning(null)
+    fileInputRef.current?.click()
+  }
+
+  function handleFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // reset so same file can be re-selected
+    if (!file || !uploadForId || !editingEvent) return
+
+    if (file.size > MAX_IMAGE_BYTES) {
+      setImageWarning(
+        `"${file.name}" is ${(file.size / 1024).toFixed(0)} KB — over the 500 KB limit. ` +
+          `Compress or resize the image before uploading.`,
+      )
+      setUploadForId(null)
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const base64 = ev.target?.result
+      if (typeof base64 !== 'string' || !editingEvent) return
+      updateSponsors(
+        editingEvent.sponsors.map((s) =>
+          s.id === uploadForId ? { ...s, imageData: base64 } : s,
+        ),
+      )
+      setImageWarning(null)
+      setUploadForId(null)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  function removeImage(sponsorId: string) {
+    if (!editingEvent) return
+    updateSponsors(
+      editingEvent.sponsors.map((s) =>
+        s.id === sponsorId ? { ...s, imageData: '' } : s,
+      ),
+    )
   }
 
   // -------------------------------------------------------------------------
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+        className="hidden"
+        onChange={handleFile}
+      />
+
       {/* Page header */}
       <div className="flex items-center justify-between">
         <h2 className="font-display text-3xl text-dark">Event Setup</h2>
@@ -371,7 +569,7 @@ export default function EventSetup() {
             </div>
           </div>
 
-          {/* Section: status — only for saved events */}
+          {/* Section: status */}
           {editingId !== 'new' && editingEvent && (
             <div className="p-5 space-y-3">
               <h4 className="font-bold text-dark/70 text-sm">Event Status</h4>
@@ -411,18 +609,29 @@ export default function EventSetup() {
                 )}
               </div>
               <p className="text-xs text-dark/40 leading-relaxed">
-                <strong>Upcoming</strong> — roster is visible, no times yet.{' '}
-                <strong>Active</strong> — times can be entered; this event shows on the
-                scoreboard. <strong>Archive</strong> — marks the event read-only and
-                downloads a JSON backup automatically.
+                <strong>Upcoming</strong> — roster visible, no times.{' '}
+                <strong>Active</strong> — scoreboard live, times can be entered.{' '}
+                <strong>Archive</strong> — read-only, downloads JSON backup.
               </p>
             </div>
           )}
 
-          {/* Section: sponsors — only for saved events */}
+          {/* Section: sponsors */}
           {editingId !== 'new' && editingEvent && (
             <div className="p-5 space-y-3">
-              <h4 className="font-bold text-dark/70 text-sm">Sponsors</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-dark/70 text-sm">Sponsors</h4>
+                {editingEvent.sponsors.length > 1 && (
+                  <span className="text-xs text-dark/30">Drag ⠿ to reorder</span>
+                )}
+              </div>
+
+              {/* Image size warning */}
+              {imageWarning && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
+                  ⚠ {imageWarning}
+                </div>
+              )}
 
               {editingEvent.sponsors.length === 0 && (
                 <p className="text-sm text-dark/40 italic">No sponsors yet.</p>
@@ -430,47 +639,26 @@ export default function EventSetup() {
 
               <div className="space-y-1.5">
                 {editingEvent.sponsors.map((s, i) => (
-                  <div
+                  <SponsorRow
                     key={s.id}
-                    className="flex items-center gap-2 bg-cream rounded-lg px-3 py-2"
-                  >
-                    <span className="flex-1 text-sm font-semibold text-dark">{s.name}</span>
-                    {s.imageData && (
-                      <span className="text-xs text-olive">🖼 logo</span>
-                    )}
-                    <div className="flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        disabled={i === 0}
-                        onClick={() => moveSponsor(s.id, 'up')}
-                        className="p-1 rounded text-dark/30 hover:text-dark disabled:opacity-20 transition-colors"
-                        title="Move up"
-                      >
-                        <ChevronUp size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={i === editingEvent.sponsors.length - 1}
-                        onClick={() => moveSponsor(s.id, 'down')}
-                        className="p-1 rounded text-dark/30 hover:text-dark disabled:opacity-20 transition-colors"
-                        title="Move down"
-                      >
-                        <ChevronDown size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeSponsor(s.id)}
-                        className="p-1 rounded text-dark/30 hover:text-orange transition-colors ml-1"
-                        title="Remove sponsor"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
+                    sponsor={s}
+                    index={i}
+                    total={editingEvent.sponsors.length}
+                    isDragging={dragId === s.id}
+                    isDragOver={dragOverId === s.id}
+                    onDragStart={() => setDragId(s.id)}
+                    onDragOver={(e) => handleDragOver(e, s.id)}
+                    onDrop={() => handleDrop(s.id)}
+                    onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+                    onUpload={() => openUpload(s.id)}
+                    onRemoveImage={() => removeImage(s.id)}
+                    onRemove={() => removeSponsor(s.id)}
+                  />
                 ))}
               </div>
 
-              <div className="flex gap-2">
+              {/* Add sponsor */}
+              <div className="flex gap-2 pt-1">
                 <input
                   value={newSponsorName}
                   onChange={(e) => setNewSponsorName(e.target.value)}
@@ -492,8 +680,8 @@ export default function EventSetup() {
                   <Plus size={14} /> Add
                 </button>
               </div>
-              <p className="text-xs text-dark/40">
-                Sponsor logo images can be uploaded in the Sponsors step.
+              <p className="text-xs text-dark/35">
+                PNG, JPG, WebP or SVG · max 500 KB per image · shown on scoreboard &amp; roster
               </p>
             </div>
           )}
