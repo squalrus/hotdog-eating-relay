@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { NavLink, Outlet, Link } from 'react-router-dom'
+import { NavLink, Outlet, Link, useLocation } from 'react-router-dom'
 import { Maximize2, Minimize2, EyeOff, Eye } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import CheckerboardStripe from './CheckerboardStripe'
@@ -48,6 +48,7 @@ function NavItems({ links }: { links: NavItem[] }) {
 
 export default function AppShell() {
   const { activeEvent } = useApp()
+  const location = useLocation()
   const [navHidden, setNavHidden] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -58,6 +59,13 @@ export default function AppShell() {
   const subtitle = activeEvent
     ? `${activeEvent.venue} · ${activeEvent.context}`
     : 'No active event'
+
+  // Dynamic document title
+  useEffect(() => {
+    document.title = eventYear
+      ? `Hot Dog Eating Relay ${eventYear}`
+      : 'Hot Dog Eating Relay'
+  }, [eventYear])
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -73,7 +81,7 @@ export default function AppShell() {
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
 
-  // ESC to restore nav when hidden (fullscreen ESC is handled by browser)
+  // ESC restores hidden nav (browser handles fullscreen ESC separately)
   useEffect(() => {
     if (!navHidden) return
     const handler = (e: KeyboardEvent) => {
@@ -85,9 +93,10 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <CheckerboardStripe />
+      {/* Hidden in print — decorative chrome */}
+      <CheckerboardStripe className="no-print" />
 
-      <header className="bg-dark text-cream px-4 py-3 flex items-center gap-3">
+      <header className="bg-dark text-cream px-4 py-3 flex items-center gap-3 no-print">
         <span className="text-4xl leading-none select-none">🌭</span>
         <div className="flex-1 min-w-0">
           <h1 className="font-display text-2xl sm:text-3xl text-orange leading-none tracking-wide truncate">
@@ -120,17 +129,12 @@ export default function AppShell() {
       </header>
 
       {!navHidden && (
-        <nav className="bg-dark-light border-b border-olive/40 px-4 overflow-x-auto">
+        <nav className="bg-dark-light border-b border-olive/40 px-4 overflow-x-auto no-print">
           <div className="flex items-stretch min-w-max">
-            {/* Display group — public-facing, projector-ready */}
             <div className="flex items-stretch">
               <NavItems links={displayLinks} />
             </div>
-
-            {/* Divider */}
             <div className="w-px bg-olive/40 mx-2 my-1.5" />
-
-            {/* Admin group — event management */}
             <div className="flex items-stretch">
               <NavItems links={adminLinks} />
             </div>
@@ -139,7 +143,7 @@ export default function AppShell() {
       )}
 
       {!activeEvent && (
-        <div className="bg-orange/10 border-b border-orange/20 px-4 py-2 text-sm text-center">
+        <div className="bg-orange/10 border-b border-orange/20 px-4 py-2 text-sm text-center no-print">
           <span className="text-orange/80">No active event — </span>
           <Link to="/event" className="text-orange font-semibold underline underline-offset-2">
             set one up in Event Setup
@@ -150,18 +154,19 @@ export default function AppShell() {
       {navHidden && (
         <button
           onClick={() => setNavHidden(false)}
-          className="fixed bottom-4 right-4 z-50 bg-dark/80 text-cream/70 hover:text-cream text-xs px-3 py-1.5 rounded-full border border-olive/40 backdrop-blur-sm transition-colors"
+          className="fixed bottom-4 right-4 z-50 bg-dark/80 text-cream/70 hover:text-cream text-xs px-3 py-1.5 rounded-full border border-olive/40 backdrop-blur-sm transition-colors no-print"
         >
           <Eye size={12} className="inline mr-1" />
           Show nav
         </button>
       )}
 
-      <main className="flex-1 p-4 sm:p-6">
+      {/* key on pathname triggers remount → re-runs fade-in animation on every navigation */}
+      <main key={location.pathname} className="flex-1 p-4 sm:p-6 animate-fade-in">
         <Outlet />
       </main>
 
-      <CheckerboardStripe />
+      <CheckerboardStripe className="no-print" />
     </div>
   )
 }

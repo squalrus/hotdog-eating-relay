@@ -1,9 +1,28 @@
+import { useRef, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Beer } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { rankTeams, formatTime } from '../lib/utils'
 import CheckerboardStripe from '../components/CheckerboardStripe'
 import type { Team, Prize } from '../types'
+
+// Flashes the row briefly when teamTime changes (e.g. a new score comes in)
+function useScoreFlash(teamTime: number | undefined): boolean {
+  const prev = useRef(teamTime)
+  const [flashing, setFlashing] = useState(false)
+
+  useEffect(() => {
+    if (prev.current !== teamTime && teamTime != null) {
+      setFlashing(true)
+      const id = setTimeout(() => setFlashing(false), 850)
+      prev.current = teamTime
+      return () => clearTimeout(id)
+    }
+    prev.current = teamTime
+  }, [teamTime])
+
+  return flashing
+}
 
 // ---------------------------------------------------------------------------
 // Medal config — only applied to prize-eligible teams
@@ -48,12 +67,13 @@ function ScoreRow({
   const medal = !isBrewer && rank <= 3 ? MEDALS[rank - 1] : undefined
   const isDNS = team.teamTime == null
   const hasSplits = team.members.some((m) => m.time != null)
+  const flashing = useScoreFlash(team.teamTime)
 
   return (
     <div
-      className={`flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 sm:py-4 border-l-4 transition-colors duration-300 ${
-        medal ? medal.bgClass : ''
-      } ${isDNS ? 'opacity-40' : ''}`}
+      className={`flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 sm:py-4 border-l-4 ${
+        flashing ? 'animate-score-flash' : 'transition-colors duration-300'
+      } ${medal ? medal.bgClass : ''} ${isDNS ? 'opacity-40' : ''}`}
       style={{ borderLeftColor: medal?.borderColor ?? 'transparent' }}
     >
       {/* Place / medal */}
@@ -206,8 +226,8 @@ export default function Scoreboard() {
 
   // Full-bleed dark container — breaks out of main's padding
   return (
-    <div className="-m-4 sm:-m-6 bg-dark text-cream flex flex-col min-h-[calc(100vh-8rem)]">
-      <CheckerboardStripe />
+    <div className="-m-4 sm:-m-6 bg-dark text-cream flex flex-col min-h-[calc(100vh-8rem)] scoreboard-print-root">
+      <CheckerboardStripe className="no-print" />
 
       {!activeEvent ? (
         <NoEvent />
@@ -304,16 +324,16 @@ export default function Scoreboard() {
             )
           })()}
 
-          {/* ── Sponsor strip ─────────────────────────────────────────── */}
+          {/* ── Sponsor strip (hidden in print) ──────────────────────── */}
           {activeEvent.sponsors.length > 0 && (
-            <div className="border-t border-white/8">
+            <div className="border-t border-white/8 no-print">
               <SponsorStrip sponsors={activeEvent.sponsors} />
             </div>
           )}
         </>
       )}
 
-      <CheckerboardStripe />
+      <CheckerboardStripe className="no-print" />
     </div>
   )
 }
