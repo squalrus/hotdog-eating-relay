@@ -159,6 +159,100 @@ function ScoreRow({
 }
 
 // ---------------------------------------------------------------------------
+// Individual leaderboard — fastest splits across all teams
+// ---------------------------------------------------------------------------
+
+interface IndividualResult {
+  key: string       // stable React key
+  memberName: string
+  teamName: string
+  isBrewer: boolean
+  time: number
+}
+
+function getTopIndividuals(teams: Team[]): IndividualResult[] {
+  const results: IndividualResult[] = []
+  for (const team of teams) {
+    team.members.forEach((member, idx) => {
+      if (member.time != null) {
+        results.push({
+          key: `${team.id}-${idx}`,
+          memberName: member.name,
+          teamName: team.name,
+          isBrewer: team.isBrewer,
+          time: member.time,
+        })
+      }
+    })
+  }
+  return results.sort((a, b) => a.time - b.time)
+}
+
+function IndividualRow({ result, rank }: { result: IndividualResult; rank: number }) {
+  const flashing = useScoreFlash(result.time)
+  const medal = rank <= 3 ? MEDALS[rank - 1] : undefined
+
+  return (
+    <div
+      className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2.5 ${
+        flashing ? 'animate-score-flash' : ''
+      }`}
+    >
+      {/* Rank / medal */}
+      <div className="w-10 sm:w-14 flex-shrink-0 flex items-center justify-center">
+        {medal ? (
+          <span className="text-xl leading-none">{medal.emoji}</span>
+        ) : (
+          <span className="font-display text-lg text-cream/30">{rank}.</span>
+        )}
+      </div>
+
+      {/* Name + team */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <span className="font-bold text-cream text-sm">{result.memberName}</span>
+          <span className="text-cream/35 text-xs truncate">{result.teamName}</span>
+          {result.isBrewer && (
+            <span className="text-xs text-olive-light flex-shrink-0">🍺</span>
+          )}
+        </div>
+      </div>
+
+      {/* Time */}
+      <span
+        className={`font-mono tabular-nums text-sm sm:text-base flex-shrink-0 ${
+          medal ? medal.textClass : 'text-cream/55'
+        }`}
+      >
+        {formatTime(result.time)}
+      </span>
+    </div>
+  )
+}
+
+function IndividualLeaderboard({ teams }: { teams: Team[] }) {
+  const individuals = getTopIndividuals(teams)
+
+  if (individuals.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center px-6 py-10 text-center">
+        <p className="text-cream/20 text-xs leading-relaxed max-w-[180px]">
+          Individual splits appear here when member times are recorded in Results Entry
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="divide-y divide-white/5">
+      {individuals.map((result, i) => (
+        <IndividualRow key={result.key} result={result} rank={i + 1} />
+      ))}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Section divider
 // ---------------------------------------------------------------------------
 
@@ -266,62 +360,83 @@ export default function Scoreboard() {
             )}
           </div>
 
-          {/* ── Column headers ───────────────────────────────────────── */}
-          <div className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-1.5 border-b border-white/5">
-            <div className="w-10 sm:w-14 flex-shrink-0" />
-            <div className="flex-1 text-xs font-bold text-cream/25 uppercase tracking-widest">
-              Team
-            </div>
-            <div className="text-xs font-bold text-cream/25 uppercase tracking-widest">
-              Time
-            </div>
-          </div>
-
-          {/* ── Rows ─────────────────────────────────────────────────── */}
+          {/* ── Two-column content area ──────────────────────────────── */}
           {(() => {
             const { eligible, brewers } = rankTeams(activeEvent.teams)
             const prizes = activeEvent.prizes
 
             return (
-              <div className="flex-1 divide-y divide-white/5">
-                {/* No teams yet */}
-                {activeEvent.teams.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6">
-                    <span className="text-5xl">🌭</span>
-                    <p className="text-cream/30 text-sm">
-                      No teams registered yet —{' '}
-                      <Link to="/teams" className="text-orange underline">
-                        add teams
-                      </Link>{' '}
-                      to see the scoreboard.
-                    </p>
+              <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+
+                {/* ── LEFT: Team rankings (≈2/3 on desktop) ─────────── */}
+                <div className="flex-1 min-w-0 flex flex-col">
+                  {/* Column header */}
+                  <div className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-1.5 border-b border-white/5">
+                    <div className="w-10 sm:w-14 flex-shrink-0" />
+                    <div className="flex-1 text-xs font-bold text-cream/25 uppercase tracking-widest">
+                      Team
+                    </div>
+                    <div className="text-xs font-bold text-cream/25 uppercase tracking-widest">
+                      Time
+                    </div>
                   </div>
-                )}
 
-                {/* Eligible teams */}
-                {eligible.map((team, i) => (
-                  <ScoreRow
-                    key={team.id}
-                    team={team}
-                    rank={i + 1}
-                    prize={prizes[i]}
-                  />
-                ))}
+                  {/* Rows */}
+                  <div className="divide-y divide-white/5">
+                    {activeEvent.teams.length === 0 && (
+                      <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6">
+                        <span className="text-5xl">🌭</span>
+                        <p className="text-cream/30 text-sm">
+                          No teams registered yet —{' '}
+                          <Link to="/teams" className="text-orange underline">
+                            add teams
+                          </Link>{' '}
+                          to see the scoreboard.
+                        </p>
+                      </div>
+                    )}
 
-                {/* Brewer divider + rows */}
-                {brewers.length > 0 && (
-                  <>
-                    <SectionDivider label="🍺 Brewers" />
-                    {brewers.map((team, i) => (
+                    {eligible.map((team, i) => (
                       <ScoreRow
                         key={team.id}
                         team={team}
                         rank={i + 1}
-                        isBrewer
+                        prize={prizes[i]}
                       />
                     ))}
-                  </>
-                )}
+
+                    {brewers.length > 0 && (
+                      <>
+                        <SectionDivider label="🍺 Brewers" />
+                        {brewers.map((team, i) => (
+                          <ScoreRow
+                            key={team.id}
+                            team={team}
+                            rank={i + 1}
+                            isBrewer
+                          />
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── RIGHT: Individual leaderboard (≈1/3 on desktop) ── */}
+                <div className="lg:w-1/3 lg:flex-shrink-0 flex flex-col border-t border-white/8 lg:border-t-0 lg:border-l lg:border-white/8">
+                  {/* Panel header */}
+                  <div className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-1.5 border-b border-white/5">
+                    <div className="w-10 sm:w-14 flex-shrink-0" />
+                    <div className="flex-1 text-xs font-bold text-cream/25 uppercase tracking-widest">
+                      ⚡ Individual
+                    </div>
+                    <div className="text-xs font-bold text-cream/25 uppercase tracking-widest">
+                      Time
+                    </div>
+                  </div>
+
+                  <IndividualLeaderboard teams={activeEvent.teams} />
+                </div>
+
               </div>
             )
           })()}
