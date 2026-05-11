@@ -1,6 +1,6 @@
 import type { AppData } from '../types'
 
-const STORAGE_KEY = 'hotdog-relay-data'
+export const STORAGE_KEY = 'hotdog-relay-data'
 
 export function loadData(): AppData {
   try {

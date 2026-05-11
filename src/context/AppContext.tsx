@@ -3,6 +3,7 @@ import {
   useContext,
   useReducer,
   useEffect,
+  useRef,
   type ReactNode,
   type Dispatch,
 } from 'react'
@@ -15,13 +16,14 @@ import type {
   Prize,
   EventStatus,
 } from '../types'
-import { loadData, saveData } from '../lib/storage'
+import { loadData, saveData, STORAGE_KEY } from '../lib/storage'
 
 // ---------------------------------------------------------------------------
 // Action types
 // ---------------------------------------------------------------------------
 
 type Action =
+  | { type: 'SYNC'; data: AppData }
   | { type: 'CREATE_EVENT'; event: HotdogEvent }
   | { type: 'UPDATE_EVENT'; id: string; patch: Partial<Omit<HotdogEvent, 'id' | 'teams' | 'sponsors' | 'prizes' | 'status'>> }
   | { type: 'SET_EVENT_STATUS'; id: string; status: EventStatus }
@@ -51,6 +53,9 @@ function patchEvent(
 
 function reducer(state: AppData, action: Action): AppData {
   switch (action.type) {
+    case 'SYNC':
+      return action.data
+
     case 'CREATE_EVENT':
       return { ...state, events: [...state.events, action.event] }
 
@@ -185,9 +190,33 @@ const AppContext = createContext<AppContextValue | null>(null)
 export function AppProvider({ children }: { children: ReactNode }) {
   const [data, dispatch] = useReducer(reducer, undefined, loadData)
 
+  // Tracks whether the current state update came from another window so we
+  // don't write it back to localStorage and trigger an echo loop.
+  const fromSync = useRef(false)
+
   useEffect(() => {
+    if (fromSync.current) {
+      fromSync.current = false
+      return
+    }
     saveData(data)
   }, [data])
+
+  // Listen for localStorage writes made by other windows/tabs and sync
+  // this window's in-memory state to match.
+  useEffect(() => {
+    function handler(e: StorageEvent) {
+      if (e.key !== STORAGE_KEY || !e.newValue) return
+      try {
+        fromSync.current = true
+        dispatch({ type: 'SYNC', data: JSON.parse(e.newValue) as AppData })
+      } catch {
+        fromSync.current = false
+      }
+    }
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
+  }, [])
 
   const activeEvent = data.events.find((e) => e.id === data.activeEventId) ?? null
 
