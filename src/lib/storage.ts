@@ -1,100 +1,50 @@
-import type { AppData } from '../types'
+import type { AppData, HotdogEvent } from '../types'
 
 export const STORAGE_KEY = 'hotdog-relay-data'
 
+// ---------------------------------------------------------------------------
+// Bundled event files
+//
+// Any JSON file added to src/data/events/ is automatically included in the
+// build and surfaces in the History page — no code changes needed.
+// Workflow: export an event from the app → move the .json file here → commit.
+// ---------------------------------------------------------------------------
+
+const eventGlob = import.meta.glob<HotdogEvent>('../data/events/*.json', {
+  eager: true,
+  import: 'default',
+})
+
+const BUNDLED_EVENTS: HotdogEvent[] = Object.values(eventGlob).map((e) => ({
+  ...e,
+  status: 'archived' as const, // file-based events are always read-only
+}))
+
+// ---------------------------------------------------------------------------
+// Load / save
+// ---------------------------------------------------------------------------
+
 export function loadData(): AppData {
+  let stored: AppData
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return getInitialData()
-    return JSON.parse(raw) as AppData
+    stored = raw ? (JSON.parse(raw) as AppData) : { activeEventId: null, events: [] }
   } catch {
-    return getInitialData()
+    stored = { activeEventId: null, events: [] }
   }
+
+  // Merge bundled events that aren't already tracked in localStorage.
+  // localStorage wins when the same id exists — user edits take precedence
+  // over the committed file (e.g. if they added member names after the fact).
+  const knownIds = new Set(stored.events.map((e) => e.id))
+  const merged = [
+    ...stored.events,
+    ...BUNDLED_EVENTS.filter((e) => !knownIds.has(e.id)),
+  ]
+
+  return { ...stored, events: merged }
 }
 
 export function saveData(data: AppData): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-}
-
-function getInitialData(): AppData {
-  return {
-    // No active event on first load — 2026 is archived, user creates 2027 when ready
-    activeEventId: null,
-    events: [
-      {
-        id: 'event-2026',
-        name: 'Hot Dog Eating Relay 2026',
-        date: '2026-05-09',
-        venue: 'Halcyon Brewing',
-        context: 'Seattle Beer Week',
-        featuredBeer: {
-          name: 'Hot Dog Time Machine',
-          description: 'Collab beer release',
-        },
-        sponsors: [
-          { id: 's1', name: 'Halcyon', imageData: '' },
-          { id: 's2', name: 'ilk', imageData: '' },
-          { id: 's3', name: 'Big Time', imageData: '' },
-          { id: 's4', name: "Ladd & Lass", imageData: '' },
-          { id: 's5', name: '3 Magnets', imageData: '' },
-          { id: 's6', name: 'Well 80', imageData: '' },
-        ],
-        prizes: [],
-        status: 'archived',
-        teams: [
-          // --- Prize-eligible teams ---
-          {
-            id: 't1',
-            name: 'Cornwoggles',
-            isBrewer: false,
-            notes: '1 NA beer',
-            // 3:41.66 = 221.66s
-            teamTime: 221.66,
-            members: [],
-          },
-          {
-            id: 't2',
-            name: 'BYU Wiener Soakers',
-            isBrewer: false,
-            // 4:05.49 = 245.49s
-            teamTime: 245.49,
-            members: [],
-          },
-          {
-            id: 't3',
-            name: 'Glizzy Guzzlers',
-            isBrewer: false,
-            // 4:25.38 = 265.38s
-            teamTime: 265.38,
-            members: [],
-          },
-          {
-            id: 't4',
-            name: 'Jessie & The Pussycats',
-            isBrewer: false,
-            // 6:00.58 = 360.58s
-            teamTime: 360.58,
-            members: [],
-          },
-          // --- Brewer teams (not prize-eligible) ---
-          {
-            id: 't5',
-            name: 'Seattle (Uh-OH Hotdog)',
-            isBrewer: true,
-            // 3:07.36 = 187.36s — fastest overall time
-            teamTime: 187.36,
-            members: [],
-          },
-          {
-            id: 't6',
-            name: 'Oly (Wiener Wrestling Federation)',
-            isBrewer: true,
-            // 4:20.62 = 260.62s
-            teamTime: 260.62,
-            members: [],
-          },
-        ],
-      },
-    ],
-  }
 }

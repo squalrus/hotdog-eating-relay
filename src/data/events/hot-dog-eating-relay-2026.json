@@ -1,0 +1,105 @@
+{
+  "id": "event-2026",
+  "name": "Hot Dog Eating Relay 2026",
+  "date": "2026-05-09",
+  "venue": "Halcyon Brewing",
+  "context": "Seattle Beer Week",
+  "featuredBeer": {
+    "name": "Hot Dog Time Machine",
+    "description": "Collab beer release"
+  },
+  "sponsors": [
+    {
+      "id": "s1",
+      "name": "Halcyon",
+      "imageData": ""
+    },
+    {
+      "id": "s2",
+      "name": "ilk",
+      "imageData": ""
+    },
+    {
+      "id": "s3",
+      "name": "Big Time",
+      "imageData": ""
+    },
+    {
+      "id": "s4",
+      "name": "Ladd & Lass",
+      "imageData": ""
+    },
+    {
+      "id": "s5",
+      "name": "3 Magnets",
+      "imageData": ""
+    },
+    {
+      "id": "s6",
+      "name": "Well 80",
+      "imageData": ""
+    }
+  ],
+  "teams": [
+    {
+      "id": "1778425136707-6y9hppv",
+      "name": "BYU Wiener Soakers",
+      "members": [],
+      "isBrewer": false,
+      "teamTime": 245.49
+    },
+    {
+      "id": "1778425184943-s8kj2xs",
+      "name": "Corntwoggles",
+      "members": [],
+      "isBrewer": false,
+      "teamTime": 221.66
+    },
+    {
+      "id": "1778425218986-drviirn",
+      "name": "Oly (Wiener Wrestling Federation)",
+      "members": [],
+      "isBrewer": true,
+      "teamTime": 260.62
+    },
+    {
+      "id": "1778457216372-rov2p27",
+      "name": "Glizzy Guzzlers",
+      "members": [],
+      "isBrewer": false,
+      "teamTime": 265.38
+    },
+    {
+      "id": "1778457235730-7hdvpsl",
+      "name": "Jessie & The Pussycats",
+      "members": [],
+      "isBrewer": false,
+      "teamTime": 360.58
+    },
+    {
+      "id": "1778464234498-7p1ryzp",
+      "name": "Seattle (Uh-OH Hotdog)",
+      "members": [],
+      "isBrewer": true,
+      "teamTime": 187.36
+    }
+  ],
+  "prizes": [
+    {
+      "id": "1778458606677-x61tdzu",
+      "place": "1st",
+      "description": "$75 Gift Card"
+    },
+    {
+      "id": "1778458610818-86yv2hj",
+      "place": "2nd",
+      "description": "$50 Gift Card"
+    },
+    {
+      "id": "1778458614835-yfapn90",
+      "place": "3rd",
+      "description": "$25 Gift Card"
+    }
+  ],
+  "status": "archived"
+}
