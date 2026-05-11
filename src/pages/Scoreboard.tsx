@@ -301,7 +301,7 @@ function NoEvent() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 px-6 text-center">
       <span className="text-7xl">🌭</span>
-      <h2 className="font-display text-4xl text-orange">Hot Dog Eating Relay</h2>
+      <h2 className="font-display text-4xl text-orange">Glizzy Relay</h2>
       <p className="text-cream/40 text-sm max-w-xs">
         No active event. Head to{' '}
         <Link to="/event" className="text-orange underline">

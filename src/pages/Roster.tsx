@@ -139,7 +139,7 @@ export default function Roster() {
 
           {/* Event name */}
           <h1 className="font-display text-4xl sm:text-6xl text-orange leading-none mb-1">
-            Hot Dog Eating Relay
+            {activeEvent.name}
           </h1>
           <p className="font-display text-xl sm:text-2xl text-cream/80 mb-4">
             @ {activeEvent.venue}

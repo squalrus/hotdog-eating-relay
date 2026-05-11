@@ -63,8 +63,8 @@ export default function AppShell() {
   // Dynamic document title
   useEffect(() => {
     document.title = eventYear
-      ? `Hot Dog Eating Relay ${eventYear}`
-      : 'Hot Dog Eating Relay'
+      ? `Glizzy Relay ${eventYear}`
+      : 'Glizzy Relay'
   }, [eventYear])
 
   const toggleFullscreen = useCallback(() => {
@@ -100,7 +100,7 @@ export default function AppShell() {
         <span className="text-4xl leading-none select-none">🌭</span>
         <div className="flex-1 min-w-0">
           <h1 className="font-display text-2xl sm:text-3xl text-orange leading-none tracking-wide truncate">
-            Hot Dog Eating Relay
+            Glizzy Relay
           </h1>
           <p className="text-xs text-cream/60 mt-0.5 truncate">{subtitle}</p>
         </div>
