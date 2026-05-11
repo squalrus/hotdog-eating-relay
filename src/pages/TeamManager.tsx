@@ -24,12 +24,26 @@ function blankForm(): TeamForm {
 function teamToForm(t: Team): TeamForm {
   return {
     name: t.name,
-    m0: t.members[0].name,
-    m1: t.members[1].name,
-    m2: t.members[2].name,
+    m0: t.members[0]?.name ?? '',
+    m1: t.members[1]?.name ?? '',
+    m2: t.members[2]?.name ?? '',
     isBrewer: t.isBrewer,
     notes: t.notes ?? '',
   }
+}
+
+// Returns the members array from a form: [] if all blank, 3-element array if all filled.
+function membersFromForm(form: TeamForm): Team['members'] {
+  const vals = [form.m0.trim(), form.m1.trim(), form.m2.trim()]
+  return vals.every((v) => v) ? vals.map((name) => ({ name })) : []
+}
+
+// Validation: name required; members must be all-filled or all-blank.
+function memberState(form: TeamForm): 'none' | 'partial' | 'all' {
+  const filled = [form.m0, form.m1, form.m2].filter((v) => v.trim()).length
+  if (filled === 0) return 'none'
+  if (filled === 3) return 'all'
+  return 'partial'
 }
 
 // ---------------------------------------------------------------------------
@@ -112,16 +126,20 @@ function TeamCard({
             </span>
           )}
         </div>
-        <ol className="mt-2 space-y-0.5">
-          {team.members.map((m, i) => (
-            <li key={i} className="text-sm text-dark/70 flex gap-2">
-              <span className="text-dark/30 w-4 text-right flex-shrink-0">{i + 1}.</span>
-              <span className={m.name === 'Member 1' || m.name === 'Member 2' || m.name === 'Member 3' ? 'text-dark/30 italic' : ''}>
-                {m.name || <span className="text-dark/30 italic">unnamed</span>}
-              </span>
-            </li>
-          ))}
-        </ol>
+
+        {team.members.length === 3 ? (
+          <ol className="mt-2 space-y-0.5">
+            {team.members.map((m, i) => (
+              <li key={i} className="text-sm text-dark/70 flex gap-2">
+                <span className="text-dark/30 w-4 text-right flex-shrink-0">{i + 1}.</span>
+                <span>{m.name}</span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-1.5 text-xs text-dark/35 italic">No individual members listed</p>
+        )}
+
         {team.notes && (
           <p className="mt-2 text-xs text-dark/50 italic">📝 {team.notes}</p>
         )}
@@ -181,9 +199,12 @@ function TeamForm({
     setForm((f) => ({ ...f, [key]: value }))
   }
 
+  const ms = memberState(form)
+  const isValid = form.name.trim() && ms !== 'partial'
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name.trim() || !form.m0.trim() || !form.m1.trim() || !form.m2.trim()) return
+    if (!isValid) return
     onSave(form)
   }
 
@@ -204,28 +225,42 @@ function TeamForm({
         required
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <FormField
-          label="Member 1"
-          value={form.m0}
-          onChange={(v) => set('m0', v)}
-          placeholder="First up"
-          required
-        />
-        <FormField
-          label="Member 2"
-          value={form.m1}
-          onChange={(v) => set('m1', v)}
-          placeholder="Second"
-          required
-        />
-        <FormField
-          label="Member 3"
-          value={form.m2}
-          onChange={(v) => set('m2', v)}
-          placeholder="Anchor"
-          required
-        />
+      {/* Member name inputs — all or nothing */}
+      <div>
+        <p className="text-xs font-bold text-dark/50 mb-2 uppercase tracking-wide">
+          Individual Members
+          <span className="normal-case font-normal text-dark/35 ml-1.5">— optional</span>
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <FormField
+            label="Member 1"
+            value={form.m0}
+            onChange={(v) => set('m0', v)}
+            placeholder="First up"
+          />
+          <FormField
+            label="Member 2"
+            value={form.m1}
+            onChange={(v) => set('m1', v)}
+            placeholder="Second"
+          />
+          <FormField
+            label="Member 3"
+            value={form.m2}
+            onChange={(v) => set('m2', v)}
+            placeholder="Anchor"
+          />
+        </div>
+        {ms === 'partial' && (
+          <p className="mt-2 text-xs text-orange font-semibold">
+            Fill in all 3 member names, or leave all blank.
+          </p>
+        )}
+        {ms === 'none' && (
+          <p className="mt-1.5 text-xs text-dark/35">
+            Leave blank to track team time only — individual splits won't be available.
+          </p>
+        )}
       </div>
 
       <FormField
@@ -260,7 +295,8 @@ function TeamForm({
       <div className="flex gap-3 pt-1">
         <button
           type="submit"
-          className="bg-orange text-cream font-bold px-5 py-2 rounded-lg hover:bg-orange-light transition-colors text-sm"
+          disabled={!isValid}
+          className="bg-orange text-cream font-bold px-5 py-2 rounded-lg hover:bg-orange-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm"
         >
           {isEditing ? 'Save Changes' : 'Add Team'}
         </button>
@@ -291,11 +327,7 @@ export default function TeamManager() {
   function handleSave(form: TeamForm) {
     if (!activeEvent) return
 
-    const members: Team['members'] = [
-      { name: form.m0.trim() },
-      { name: form.m1.trim() },
-      { name: form.m2.trim() },
-    ]
+    const members = membersFromForm(form)
 
     if (mode === 'add') {
       dispatch({
@@ -341,7 +373,6 @@ export default function TeamManager() {
     return blankForm()
   }
 
-  // -- No active event guard ------------------------------------------------
   if (!activeEvent) {
     return (
       <div className="max-w-2xl mx-auto text-center py-12">
@@ -351,7 +382,6 @@ export default function TeamManager() {
     )
   }
 
-  // -- Archived event guard -------------------------------------------------
   if (activeEvent.status === 'archived') {
     return (
       <div className="max-w-2xl mx-auto text-center py-12">

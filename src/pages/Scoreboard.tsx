@@ -116,10 +116,12 @@ function ScoreRow({
           )}
         </div>
 
-        {/* Member names */}
-        <p className="text-cream/25 text-xs mt-0.5 truncate">
-          {team.members.map((m) => m.name).join(' · ')}
-        </p>
+        {/* Member names — only shown when individually named */}
+        {team.members.length === 3 && (
+          <p className="text-cream/25 text-xs mt-0.5 truncate">
+            {team.members.map((m) => m.name).join(' · ')}
+          </p>
+        )}
 
         {/* Individual splits (only if any member has a time) */}
         {hasSplits && (

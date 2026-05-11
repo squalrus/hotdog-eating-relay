@@ -6,7 +6,9 @@ export interface Member {
 export interface Team {
   id: string
   name: string
-  members: [Member, Member, Member]
+  // Either empty (individuals not tracked) or exactly 3 entries.
+  // The UI enforces: fill all 3 or leave all blank.
+  members: Member[]
   teamTime?: number  // float seconds, supports centiseconds (e.g. 221.66)
   isBrewer: boolean  // brewer teams compete but are ineligible for prizes
   notes?: string     // scorekeeper annotations (e.g. rule clarifications)

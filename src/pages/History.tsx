@@ -120,20 +120,18 @@ function HistoryRoster({ event }: { event: HotdogEvent }) {
                 className="bg-cream rounded-xl border-2 border-cream-dark p-3"
               >
                 <p className="font-display text-lg text-dark leading-tight">{team.name}</p>
-                <ol className="mt-1.5 space-y-0.5">
-                  {team.members.map((m, i) => (
-                    <li key={i} className="flex gap-2 text-sm">
-                      <span className="text-dark/30 w-4 text-right flex-shrink-0">{i + 1}.</span>
-                      <span className={
-                        m.name === 'Member 1' || m.name === 'Member 2' || m.name === 'Member 3'
-                          ? 'text-dark/30 italic'
-                          : 'text-dark/70'
-                      }>
-                        {m.name}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
+                {team.members.length === 3 ? (
+                  <ol className="mt-1.5 space-y-0.5">
+                    {team.members.map((m, i) => (
+                      <li key={i} className="flex gap-2 text-sm">
+                        <span className="text-dark/30 w-4 text-right flex-shrink-0">{i + 1}.</span>
+                        <span className="text-dark/70">{m.name}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-xs text-dark/35 italic mt-1.5">Members not listed</p>
+                )}
                 {team.notes && (
                   <p className="text-xs text-dark/40 italic mt-1.5 border-t border-dark/8 pt-1.5">
                     {team.notes}
@@ -157,14 +155,18 @@ function HistoryRoster({ event }: { event: HotdogEvent }) {
                 className="bg-olive/8 rounded-xl border-2 border-olive/20 p-3"
               >
                 <p className="font-display text-lg text-dark leading-tight">{team.name}</p>
-                <ol className="mt-1.5 space-y-0.5">
-                  {team.members.map((m, i) => (
-                    <li key={i} className="flex gap-2 text-sm">
-                      <span className="text-dark/30 w-4 text-right flex-shrink-0">{i + 1}.</span>
-                      <span className="text-dark/60">{m.name}</span>
-                    </li>
-                  ))}
-                </ol>
+                {team.members.length === 3 ? (
+                  <ol className="mt-1.5 space-y-0.5">
+                    {team.members.map((m, i) => (
+                      <li key={i} className="flex gap-2 text-sm">
+                        <span className="text-dark/30 w-4 text-right flex-shrink-0">{i + 1}.</span>
+                        <span className="text-dark/60">{m.name}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-xs text-dark/35 italic mt-1.5">Members not listed</p>
+                )}
               </div>
             ))}
           </div>

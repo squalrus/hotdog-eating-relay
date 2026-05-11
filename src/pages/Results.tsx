@@ -81,7 +81,7 @@ function TimeInput({
 // ---------------------------------------------------------------------------
 
 function useSumWarning(team: Team): { diff: number; sumSeconds: number } | null {
-  if (team.teamTime == null) return null
+  if (team.teamTime == null || team.members.length !== 3) return null
   const times = team.members.map((m) => m.time).filter((t): t is number => t != null)
   if (times.length < 3) return null
   const sumSeconds = times.reduce((a, b) => a + b, 0)
@@ -108,13 +108,17 @@ function TeamRow({ team, eventId }: { team: Team; eventId: string }) {
     >
       {/* ── Team row ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-4 py-3">
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="text-dark/30 hover:text-dark transition-colors flex-shrink-0"
-          title={expanded ? 'Hide individual times' : 'Show individual times'}
-        >
-          {expanded ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
-        </button>
+        {team.members.length === 3 ? (
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="text-dark/30 hover:text-dark transition-colors flex-shrink-0"
+            title={expanded ? 'Hide individual times' : 'Show individual times'}
+          >
+            {expanded ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
+          </button>
+        ) : (
+          <span className="w-[17px] flex-shrink-0" />
+        )}
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -143,8 +147,8 @@ function TeamRow({ team, eventId }: { team: Team; eventId: string }) {
         </div>
       </div>
 
-      {/* ── Expanded: individual member rows ─────────────────────────── */}
-      {expanded && (
+      {/* ── Expanded: individual member rows (only when members are named) */}
+      {expanded && team.members.length === 3 && (
         <div className="border-t border-dark/10 divide-y divide-dark/5 bg-white/40">
           {team.members.map((member, i) => (
             <div key={i} className="flex items-center gap-3 pl-12 pr-4 py-2.5">

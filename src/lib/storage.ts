@@ -50,11 +50,7 @@ function getInitialData(): AppData {
             notes: '1 NA beer',
             // 3:41.66 = 221.66s
             teamTime: 221.66,
-            members: [
-              { name: 'Member 1' },
-              { name: 'Member 2' },
-              { name: 'Member 3' },
-            ],
+            members: [],
           },
           {
             id: 't2',
@@ -62,11 +58,7 @@ function getInitialData(): AppData {
             isBrewer: false,
             // 4:05.49 = 245.49s
             teamTime: 245.49,
-            members: [
-              { name: 'Member 1' },
-              { name: 'Member 2' },
-              { name: 'Member 3' },
-            ],
+            members: [],
           },
           {
             id: 't3',
@@ -74,11 +66,7 @@ function getInitialData(): AppData {
             isBrewer: false,
             // 4:25.38 = 265.38s
             teamTime: 265.38,
-            members: [
-              { name: 'Member 1' },
-              { name: 'Member 2' },
-              { name: 'Member 3' },
-            ],
+            members: [],
           },
           {
             id: 't4',
@@ -86,11 +74,7 @@ function getInitialData(): AppData {
             isBrewer: false,
             // 6:00.58 = 360.58s
             teamTime: 360.58,
-            members: [
-              { name: 'Member 1' },
-              { name: 'Member 2' },
-              { name: 'Member 3' },
-            ],
+            members: [],
           },
           // --- Brewer teams (not prize-eligible) ---
           {
@@ -99,11 +83,7 @@ function getInitialData(): AppData {
             isBrewer: true,
             // 3:07.36 = 187.36s — fastest overall time
             teamTime: 187.36,
-            members: [
-              { name: 'Member 1' },
-              { name: 'Member 2' },
-              { name: 'Member 3' },
-            ],
+            members: [],
           },
           {
             id: 't6',
@@ -111,11 +91,7 @@ function getInitialData(): AppData {
             isBrewer: true,
             // 4:20.62 = 260.62s
             teamTime: 260.62,
-            members: [
-              { name: 'Member 1' },
-              { name: 'Member 2' },
-              { name: 'Member 3' },
-            ],
+            members: [],
           },
         ],
       },

@@ -11,7 +11,6 @@ import type {
   AppData,
   HotdogEvent,
   Team,
-  Member,
   Sponsor,
   Prize,
   EventStatus,
@@ -120,8 +119,8 @@ function reducer(state: AppData, action: Action): AppData {
           teams: e.teams.map((t) => {
             if (t.id !== action.teamId) return t
             const members = t.members.map((m, i) =>
-              i === action.memberIndex ? ({ ...m, time: action.time } satisfies Member) : m,
-            ) as [Member, Member, Member]
+              i === action.memberIndex ? { ...m, time: action.time } : m,
+            )
             return { ...t, members }
           }),
         })),

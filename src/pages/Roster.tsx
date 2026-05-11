@@ -32,22 +32,20 @@ function TeamCard({ team }: { team: Team }) {
         )}
       </div>
 
-      <ol className="space-y-1">
-        {team.members.map((m, i) => {
-          const isPlaceholder =
-            m.name === 'Member 1' || m.name === 'Member 2' || m.name === 'Member 3'
-          return (
+      {team.members.length === 3 ? (
+        <ol className="space-y-1">
+          {team.members.map((m, i) => (
             <li key={i} className="flex items-center gap-2 text-sm">
               <span className="w-5 h-5 rounded-full bg-dark/10 text-dark/50 text-xs font-bold flex items-center justify-center flex-shrink-0">
                 {i + 1}
               </span>
-              <span className={isPlaceholder ? 'text-dark/30 italic' : 'text-dark font-medium'}>
-                {isPlaceholder ? '—' : m.name}
-              </span>
+              <span className="text-dark font-medium">{m.name}</span>
             </li>
-          )
-        })}
-      </ol>
+          ))}
+        </ol>
+      ) : (
+        <p className="text-xs text-dark/35 italic mt-1">Members not listed</p>
+      )}
 
       {team.notes && (
         <p className="text-xs text-dark/40 italic border-t border-dark/10 pt-1.5 mt-1">
