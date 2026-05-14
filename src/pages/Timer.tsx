@@ -88,6 +88,7 @@ export default function Timer() {
   const [now, setNow] = useState(Date.now())
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [applied, setApplied] = useState(false)
+  const [celebrating, setCelebrating] = useState(false)
 
   const phase = Math.min(timestamps.length, 4)
   const isRunning = phase >= 1 && phase < 4
@@ -104,6 +105,14 @@ export default function Timer() {
     id = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(id)
   }, [isRunning])
+
+  // Trigger hotdog celebration on finish
+  useEffect(() => {
+    if (!isDone) return
+    setCelebrating(true)
+    const id = setTimeout(() => setCelebrating(false), 2200)
+    return () => clearTimeout(id)
+  }, [isDone])
 
   // Team / member info
   const teams = activeEvent?.teams ?? []
@@ -188,6 +197,7 @@ export default function Timer() {
     setTimestamps([])
     setNow(Date.now())
     setApplied(false)
+    setCelebrating(false)
   }
 
   // -- No active event -------------------------------------------------------
@@ -251,15 +261,15 @@ export default function Timer() {
           {phaseLabel}
         </p>
 
-        {/* Primary: current member split time */}
+        {/* Primary: current member split (running) or final team total (done) */}
         <div className="text-center">
           {phase > 1 && isRunning && (
             <p className="text-cream/30 text-xs uppercase tracking-widest mb-1">
               {memberNames[phase - 1]}
             </p>
           )}
-          <p className="font-display text-6xl sm:text-8xl md:text-9xl tabular-nums leading-none text-cream">
-            {formatTime(phase >= 1 ? memberSec : 0)}
+          <p className={`font-display text-6xl sm:text-8xl md:text-9xl tabular-nums leading-none transition-colors ${isDone ? 'text-orange' : 'text-cream'}`}>
+            {formatTime(isDone && teamTotal != null ? teamTotal : phase >= 1 ? memberSec : 0)}
           </p>
         </div>
 
@@ -292,15 +302,6 @@ export default function Timer() {
           </div>
         )}
 
-        {/* Team total (done) */}
-        {isDone && teamTotal != null && (
-          <div className="text-center border-t border-white/10 pt-4 w-full max-w-xs">
-            <p className="text-cream/30 text-xs uppercase tracking-widest mb-1">Team Total</p>
-            <p className="font-display text-5xl sm:text-6xl text-orange tabular-nums">
-              {formatTime(teamTotal)}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* ── Action zone: fixed height so button never moves ─────────────── */}
@@ -342,6 +343,33 @@ export default function Timer() {
           </div>
         )}
       </div>
+
+      {/* ── Flying hotdogs on finish ─────────────────────────────────────── */}
+      {celebrating && (
+        <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+          {[
+            { top: '8%',  delay: 0,   dur: 1000 },
+            { top: '22%', delay: 120, dur: 900  },
+            { top: '38%', delay: 240, dur: 1100 },
+            { top: '53%', delay: 60,  dur: 950  },
+            { top: '67%', delay: 320, dur: 1050 },
+            { top: '80%', delay: 160, dur: 850  },
+            { top: '15%', delay: 440, dur: 1150 },
+            { top: '72%', delay: 500, dur: 1200 },
+          ].map((hd, i) => (
+            <span
+              key={i}
+              className="absolute text-5xl select-none"
+              style={{
+                top: hd.top,
+                animation: `hotdog-fly ${hd.dur}ms ease-out ${hd.delay}ms forwards`,
+              }}
+            >
+              🌭
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

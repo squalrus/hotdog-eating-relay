@@ -22,10 +22,18 @@
 
 /* ── Keyframes ────────────────────────────────────────────────────────────── */
 
-/* Hotdog relay timer animation */
+/* Hotdog relay timer — bounce while running */
 @keyframes glizzy-run {
   0%, 100% { transform: rotate(-20deg) translateY(2px) scale(0.9); }
   50%       { transform: rotate(20deg)  translateY(-14px) scale(1.15); }
+}
+
+/* Hotdogs flying across the screen on finish */
+@keyframes hotdog-fly {
+  0%   { transform: translateX(-120px) rotate(-15deg); opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { transform: translateX(calc(100vw + 120px)) rotate(20deg); opacity: 0; }
 }
 
 /* Briefly highlights a scoreboard row when a new time is recorded */
