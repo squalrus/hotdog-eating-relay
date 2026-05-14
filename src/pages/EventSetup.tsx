@@ -1,4 +1,4 @@
-import { useState, useRef, type FormEvent, type ChangeEvent } from 'react'
+import React, { useState, useRef, type ChangeEvent } from 'react'
 import { Plus, Trash2, Download, Archive, GripVertical, Upload, ImageOff } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { exportEventJSON } from '../lib/exportImport'
@@ -22,8 +22,8 @@ function blankForm(): FormData {
   return {
     name: '',
     date: new Date().toISOString().slice(0, 10),
-    venue: 'Halcyon Brewing',
-    context: 'Seattle Beer Week',
+    venue: '',
+    context: '',
     beerName: '',
     beerDescription: '',
   }
@@ -262,7 +262,7 @@ export default function EventSetup() {
     setSavedAt(null)
   }
 
-  function handleSave(e: FormEvent) {
+  function handleSave(e: React.SyntheticEvent) {
     e.preventDefault()
     if (!form.name.trim()) return
 
@@ -517,7 +517,7 @@ export default function EventSetup() {
                   name="venue"
                   value={form.venue}
                   onChange={handleChange}
-                  placeholder="Halcyon Brewing"
+                  placeholder="e.g. Halcyon Brewing"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -526,7 +526,33 @@ export default function EventSetup() {
                   name="context"
                   value={form.context}
                   onChange={handleChange}
-                  placeholder="Seattle Beer Week"
+                  placeholder="e.g. Seattle Beer Week"
+                />
+              </div>
+            </div>
+
+          </div>
+
+          {/* Section: featured beer */}
+          <div className="p-5 space-y-3">
+            <h4 className="font-bold text-dark/70 text-sm">🍺 Featured Beer</h4>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <FieldLabel>Beer Name</FieldLabel>
+                <TextInput
+                  name="beerName"
+                  value={form.beerName}
+                  onChange={handleChange}
+                  placeholder="e.g. Hot Dog Time Machine"
+                />
+              </div>
+              <div>
+                <FieldLabel>Description / Notes</FieldLabel>
+                <TextInput
+                  name="beerDescription"
+                  value={form.beerDescription}
+                  onChange={handleChange}
+                  placeholder="e.g. Collab beer release"
                 />
               </div>
             </div>
@@ -541,31 +567,6 @@ export default function EventSetup() {
               {savedAt !== null && (
                 <span className="text-sm text-olive font-semibold">✓ Saved</span>
               )}
-            </div>
-          </div>
-
-          {/* Section: featured beer */}
-          <div className="p-5 space-y-3">
-            <h4 className="font-bold text-dark/70 text-sm">🍺 Featured Beer</h4>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <FieldLabel>Beer Name</FieldLabel>
-                <TextInput
-                  name="beerName"
-                  value={form.beerName}
-                  onChange={handleChange}
-                  placeholder="Hot Dog Time Machine"
-                />
-              </div>
-              <div>
-                <FieldLabel>Description / Notes</FieldLabel>
-                <TextInput
-                  name="beerDescription"
-                  value={form.beerDescription}
-                  onChange={handleChange}
-                  placeholder="Collab beer release"
-                />
-              </div>
             </div>
           </div>
 

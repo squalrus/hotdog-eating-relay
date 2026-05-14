@@ -77,16 +77,16 @@ function TimeInput({
 }
 
 // ---------------------------------------------------------------------------
-// Individual-sum warning helper
+// Split validation — computed inline in TeamRow
+// Returns null when not all splits are entered.
 // ---------------------------------------------------------------------------
 
-function useSumWarning(team: Team): { diff: number; sumSeconds: number } | null {
-  if (team.teamTime == null || team.members.length !== 3) return null
-  const times = team.members.map((m) => m.time).filter((t): t is number => t != null)
-  if (times.length < 3) return null
-  const sumSeconds = times.reduce((a, b) => a + b, 0)
-  const diff = Math.abs(sumSeconds - team.teamTime)
-  return diff > 5 ? { diff, sumSeconds } : null
+interface SplitInfo {
+  // All values in integer centiseconds to avoid float accumulation errors.
+  sumCs: number          // split sum rounded to centiseconds
+  teamCs: number | null  // team time in centiseconds, null if not set
+  diffCs: number | null  // absolute diff in centiseconds, null if no team time
+  matches: boolean       // true when diffCs === 0
 }
 
 // ---------------------------------------------------------------------------
@@ -96,7 +96,17 @@ function useSumWarning(team: Team): { diff: number; sumSeconds: number } | null 
 function TeamRow({ team, eventId }: { team: Team; eventId: string }) {
   const { dispatch } = useApp()
   const [expanded, setExpanded] = useState(false)
-  const sumWarning = useSumWarning(team)
+
+  // Compute split validation in integer centiseconds to avoid float accumulation.
+  const splitInfo: SplitInfo | null = (() => {
+    if (team.members.length !== 3) return null
+    if (!team.members.every((m) => m.time != null)) return null
+    const rawSum = team.members.reduce((acc, m) => acc + (m.time ?? 0), 0)
+    const sumCs = Math.round(rawSum * 100)
+    const teamCs = team.teamTime != null ? Math.round(team.teamTime * 100) : null
+    const diffCs = teamCs != null ? Math.abs(sumCs - teamCs) : null
+    return { sumCs, teamCs, diffCs, matches: diffCs === 0 }
+  })()
 
   return (
     <div
@@ -137,7 +147,10 @@ function TeamRow({ team, eventId }: { team: Team; eventId: string }) {
         </div>
 
         <div className="flex-shrink-0">
+          {/* key derived from formatted value so the input re-initialises
+              when team time is set externally (e.g. the sync button). */}
           <TimeInput
+            key={team.teamTime != null ? formatTime(team.teamTime) : 'unset'}
             value={team.teamTime}
             aria-label={`Team time for ${team.name}`}
             onSave={(time) =>
@@ -179,19 +192,37 @@ function TeamRow({ team, eventId }: { team: Team; eventId: string }) {
             </div>
           ))}
 
-          {/* Sum mismatch warning */}
-          {sumWarning && (
-            <div className="flex items-start gap-2 pl-12 pr-4 py-2.5 bg-amber-50">
-              <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-700 leading-relaxed">
-                Individual times sum to{' '}
-                <strong className="font-mono">{formatTime(sumWarning.sumSeconds)}</strong>
-                {' '}— team time is{' '}
-                <strong className="font-mono">{formatTime(team.teamTime!)}</strong>
-                {' '}({sumWarning.diff.toFixed(2)}s apart).
-                Double-check the splits.
-              </p>
-            </div>
+          {/* Split validation — always shown once all splits are entered */}
+          {splitInfo && (
+            splitInfo.matches ? (
+              <div className="flex items-center gap-2 pl-12 pr-4 py-2 bg-green-50 border-t border-dark/5">
+                <span className="text-xs text-green-600 font-semibold">✓ Splits match team time</span>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2 pl-12 pr-4 py-2.5 bg-amber-50 border-t border-dark/5">
+                <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    {splitInfo.diffCs == null ? (
+                      <>Splits sum to <strong className="font-mono">{formatTime(splitInfo.sumCs / 100)}</strong> — no team time set.</>
+                    ) : (
+                      <>
+                        Splits sum to <strong className="font-mono">{formatTime(splitInfo.sumCs / 100)}</strong>
+                        {' '}— team time is <strong className="font-mono">{formatTime(splitInfo.teamCs! / 100)}</strong>
+                        {' '}({(splitInfo.diffCs / 100).toFixed(2)}s apart).
+                      </>
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: 'SET_TEAM_TIME', eventId, teamId: team.id, time: splitInfo.sumCs / 100 })}
+                    className="mt-1 text-xs font-bold text-amber-700 underline underline-offset-2 hover:text-amber-900 transition-colors"
+                  >
+                    Set team time to {formatTime(splitInfo.sumCs / 100)}
+                  </button>
+                </div>
+              </div>
+            )
           )}
         </div>
       )}
