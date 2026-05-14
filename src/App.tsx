@@ -10,6 +10,7 @@ import TeamManager from './pages/TeamManager'
 import Results from './pages/Results'
 import Prizes from './pages/Prizes'
 import History from './pages/History'
+import EventDetail from './pages/EventDetail'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="results" element={<Results />} />
             <Route path="prizes" element={<Prizes />} />
             <Route path="history" element={<History />} />
+            <Route path="history/:slug" element={<EventDetail />} />
           </Route>
         </Routes>
       </BrowserRouter>

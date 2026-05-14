@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
-import { Download, Upload, ChevronDown, ChevronRight, Beer, Trophy } from 'lucide-react'
+import { Download, Upload, ChevronDown, ChevronRight, Beer, Trophy, Link2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { exportEventJSON, importEventJSON } from '../lib/exportImport'
 import { rankTeams, formatTime } from '../lib/utils'
@@ -253,18 +254,30 @@ function EventCard({
           </div>
         </div>
 
-        {/* Export button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onExport()
-          }}
-          title="Download JSON backup"
-          className="flex-shrink-0 flex items-center gap-1 text-xs text-olive-dark font-bold px-2.5 py-1.5 rounded-lg border-2 border-olive/30 hover:bg-olive/10 transition-colors"
-        >
-          <Download size={12} /> JSON
-        </button>
+        {/* Action buttons */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {event.slug && (
+            <Link
+              to={`/history/${event.slug}`}
+              onClick={(e) => e.stopPropagation()}
+              title="Open shareable link"
+              className="flex items-center gap-1 text-xs text-dark/50 font-bold px-2.5 py-1.5 rounded-lg border-2 border-dark/15 hover:bg-dark/5 transition-colors"
+            >
+              <Link2 size={12} /> Share
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onExport()
+            }}
+            title="Download JSON backup"
+            className="flex items-center gap-1 text-xs text-olive-dark font-bold px-2.5 py-1.5 rounded-lg border-2 border-olive/30 hover:bg-olive/10 transition-colors"
+          >
+            <Download size={12} /> JSON
+          </button>
+        </div>
       </div>
 
       {/* Expanded panel */}

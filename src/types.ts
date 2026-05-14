@@ -44,6 +44,9 @@ export interface HotdogEvent {
   teams: Team[]
   prizes: Prize[]
   status: EventStatus
+  // Derived from the filename in src/data/events/ — enables shareable URLs.
+  // Included in JSON exports so the slug is preserved on re-import.
+  slug?: string
 }
 
 export interface AppData {

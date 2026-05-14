@@ -13,7 +13,7 @@ interface NavItem {
 const displayLinks: NavItem[] = [
   { to: '/', label: '🏠 Home', end: true },
   { to: '/scoreboard', label: '🏆 Scoreboard', end: false },
-  { to: '/roster', label: '👥 Roster', end: false },
+  { to: '/roster', label: '📋 Roster', end: false },
   { to: '/timer', label: '⏱ Timer', end: false },
 ]
 

@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Beer } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { rankTeams, formatTime } from '../lib/utils'
+import { rankTeams, formatTime, computeRanks } from '../lib/utils'
 import CheckerboardStripe from '../components/CheckerboardStripe'
 import type { Team, Prize } from '../types'
 
@@ -80,10 +80,10 @@ function ScoreRow({
       <div className="w-10 sm:w-14 flex-shrink-0 flex items-center justify-center">
         {isBrewer ? (
           <span className="font-display text-xl text-olive-light">{rank}.</span>
+        ) : isDNS ? (
+          <span className="text-xs font-bold text-cream/20 uppercase tracking-wide">TBD</span>
         ) : medal ? (
           <span className="text-3xl leading-none">{medal.emoji}</span>
-        ) : isDNS ? (
-          <span className="text-xs font-bold text-cream/20 uppercase tracking-wide">DNS</span>
         ) : (
           <span className="font-display text-2xl text-cream/40">{rank}.</span>
         )}
@@ -243,10 +243,11 @@ function IndividualLeaderboard({ teams }: { teams: Team[] }) {
     )
   }
 
+  const individualRanks = computeRanks(individuals.map((r) => r.time))
   return (
     <div className="divide-y divide-white/5">
       {individuals.map((result, i) => (
-        <IndividualRow key={result.key} result={result} rank={i + 1} />
+        <IndividualRow key={result.key} result={result} rank={individualRanks[i]} />
       ))}
     </div>
   )
@@ -396,26 +397,32 @@ export default function Scoreboard() {
                       </div>
                     )}
 
-                    {eligible.map((team, i) => (
-                      <ScoreRow
-                        key={team.id}
-                        team={team}
-                        rank={i + 1}
-                        prize={prizes[i]}
-                      />
-                    ))}
+                    {(() => {
+                      const eligibleRanks = computeRanks(eligible.map((t) => t.teamTime))
+                      return eligible.map((team, i) => (
+                        <ScoreRow
+                          key={team.id}
+                          team={team}
+                          rank={eligibleRanks[i]}
+                          prize={prizes[eligibleRanks[i] - 1]}
+                        />
+                      ))
+                    })()}
 
                     {brewers.length > 0 && (
                       <>
                         <SectionDivider label="🍺 Brewers" />
-                        {brewers.map((team, i) => (
-                          <ScoreRow
-                            key={team.id}
-                            team={team}
-                            rank={i + 1}
-                            isBrewer
-                          />
-                        ))}
+                        {(() => {
+                          const brewerRanks = computeRanks(brewers.map((t) => t.teamTime))
+                          return brewers.map((team, i) => (
+                            <ScoreRow
+                              key={team.id}
+                              team={team}
+                              rank={brewerRanks[i]}
+                              isBrewer
+                            />
+                          ))
+                        })()}
                       </>
                     )}
                   </div>

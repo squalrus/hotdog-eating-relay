@@ -15,10 +15,18 @@ const eventGlob = import.meta.glob<HotdogEvent>('../data/events/*.json', {
   import: 'default',
 })
 
-const BUNDLED_EVENTS: HotdogEvent[] = Object.values(eventGlob).map((e) => ({
-  ...e,
-  status: 'archived' as const, // file-based events are always read-only
-}))
+// Attach the filename (without .json) as the event slug for shareable URLs.
+// If the JSON already has a slug field, it takes precedence.
+const BUNDLED_EVENTS: HotdogEvent[] = Object.entries(eventGlob).map(([path, e]) => {
+  const filenameSlug = path.split('/').pop()?.replace('.json', '')
+  return {
+    ...e,
+    status: 'archived' as const,
+    slug: e.slug ?? filenameSlug,
+  }
+})
+
+const BUNDLED_BY_ID = new Map(BUNDLED_EVENTS.map((e) => [e.id, e]))
 
 // ---------------------------------------------------------------------------
 // Load / save
@@ -33,12 +41,19 @@ export function loadData(): AppData {
     stored = { activeEventId: null, events: [] }
   }
 
+  // If a localStorage event corresponds to a bundled file, copy the slug so
+  // the shareable URL works even when the event lives in localStorage.
+  const storedWithSlugs = stored.events.map((e) => {
+    const bundled = BUNDLED_BY_ID.get(e.id)
+    if (bundled?.slug && !e.slug) return { ...e, slug: bundled.slug }
+    return e
+  })
+
   // Merge bundled events that aren't already tracked in localStorage.
-  // localStorage wins when the same id exists — user edits take precedence
-  // over the committed file (e.g. if they added member names after the fact).
-  const knownIds = new Set(stored.events.map((e) => e.id))
+  // localStorage wins when the same id exists — user edits take precedence.
+  const knownIds = new Set(storedWithSlugs.map((e) => e.id))
   const merged = [
-    ...stored.events,
+    ...storedWithSlugs,
     ...BUNDLED_EVENTS.filter((e) => !knownIds.has(e.id)),
   ]
 
