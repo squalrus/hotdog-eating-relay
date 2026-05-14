@@ -34,7 +34,7 @@ function NavItems({ links }: { links: NavItem[] }) {
           to={to}
           end={end}
           className={({ isActive }) =>
-            `px-3 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
+            `px-3 py-1.5 sm:py-2.5 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
               isActive
                 ? 'text-orange border-orange'
                 : 'text-cream/60 border-transparent hover:text-cream hover:border-cream/30'
@@ -98,7 +98,7 @@ export default function AppShell() {
       {/* Hidden in print — decorative chrome */}
       <CheckerboardStripe className="no-print" />
 
-      <header className="bg-dark text-cream px-4 py-3 flex items-center gap-3 no-print">
+      <header className="bg-dark text-cream px-4 py-2 sm:py-3 flex items-center gap-3 no-print">
         <span className="text-4xl leading-none select-none">🌭</span>
         <div className="flex-1 min-w-0">
           <h1 className="font-display text-2xl sm:text-3xl text-orange leading-none tracking-wide truncate">

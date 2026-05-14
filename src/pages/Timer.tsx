@@ -212,7 +212,7 @@ export default function Timer() {
     <div className="-m-4 sm:-m-6 bg-dark text-cream flex flex-col min-h-[calc(100vh-8rem)]">
 
       {/* ── Top bar: team selector ──────────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-4 sm:px-6 py-3 border-b border-white/8">
+      <div className="flex items-center gap-3 px-4 sm:px-6 py-2 sm:py-3 border-b border-white/8">
         <label className="text-xs text-cream/35 font-bold uppercase tracking-wide flex-shrink-0">
           Team
         </label>
@@ -305,7 +305,7 @@ export default function Timer() {
 
       {/* ── Action zone: fixed height so button never moves ─────────────── */}
       {/* min-h accommodates the largest element (h-44 button = 176px + gaps) */}
-      <div className="flex-shrink-0 flex flex-col items-center justify-center gap-3 px-4 pb-6 sm:pb-8 pt-2 min-h-[210px] sm:min-h-[240px]">
+      <div className="flex-shrink-0 flex flex-col items-center justify-center gap-3 px-4 pb-4 sm:pb-8 pt-1 sm:pt-2 min-h-[200px] sm:min-h-[240px]">
         {!isDone ? (
           <>
             <TriggerButton phase={phase} onClick={handleAction} />
