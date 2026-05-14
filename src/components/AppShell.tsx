@@ -51,6 +51,7 @@ function NavItems({ links }: { links: NavItem[] }) {
 export default function AppShell() {
   const { activeEvent } = useApp()
   const location = useLocation()
+  const isTimerPage = location.pathname === '/timer'
   const [navHidden, setNavHidden] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -94,7 +95,7 @@ export default function AppShell() {
   }, [navHidden])
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`flex flex-col ${isTimerPage ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
       {/* Hidden in print — decorative chrome */}
       <CheckerboardStripe className="no-print" />
 
@@ -164,11 +165,11 @@ export default function AppShell() {
       )}
 
       {/* key on pathname triggers remount → re-runs fade-in animation on every navigation */}
-      <main key={location.pathname} className="flex-1 p-4 sm:p-6 animate-fade-in">
+      <main key={location.pathname} className={`flex-1 animate-fade-in ${isTimerPage ? 'overflow-hidden' : 'p-4 sm:p-6'}`}>
         <Outlet />
       </main>
 
-      <CheckerboardStripe className="no-print" />
+      {!isTimerPage && <CheckerboardStripe className="no-print" />}
     </div>
   )
 }

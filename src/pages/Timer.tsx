@@ -219,7 +219,7 @@ export default function Timer() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="-m-4 sm:-m-6 bg-dark text-cream flex flex-col min-h-[calc(100vh-8rem)]">
+    <div className="bg-dark text-cream flex flex-col h-full">
 
       {/* ── Top bar: team selector ──────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-4 sm:px-6 py-2 sm:py-3 border-b border-white/8">
