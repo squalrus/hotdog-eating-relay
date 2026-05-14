@@ -1,0 +1,91 @@
+{
+  "id": "event-2025-birthday",
+  "name": "Birthday Bash Glizzy Relay 2025",
+  "date": "2025-06-19",
+  "venue": "The Schulz Estate",
+  "context": "Annual Birthday Extravaganza",
+  "featuredBeer": {
+    "name": "Birthday Blonde Ale",
+    "description": "Brewed with confetti and pure hubris"
+  },
+  "sponsors": [],
+  "prizes": [
+    {
+      "id": "bp-prize-1",
+      "place": "1st",
+      "description": "Golden Glizzy Trophy"
+    },
+    {
+      "id": "bp-prize-2",
+      "place": "2nd",
+      "description": "$50 Bar Tab"
+    },
+    {
+      "id": "bp-prize-3",
+      "place": "3rd",
+      "description": "A Firm Handshake & Eternal Respect"
+    }
+  ],
+  "status": "archived",
+  "teams": [
+    {
+      "id": "bp-t1",
+      "name": "Franks for the Memories",
+      "isBrewer": false,
+      "teamTime": 208.14,
+      "members": [
+        { "name": "Tommy Relish", "time": 62.45 },
+        { "name": "Big Dog Bonnie", "time": 68.33 },
+        { "name": "The Condiment Kid", "time": 77.36 }
+      ]
+    },
+    {
+      "id": "bp-t2",
+      "name": "Weenie World Order",
+      "isBrewer": false,
+      "teamTime": 232.77,
+      "members": [
+        { "name": "Randy Mustard", "time": 75.22 },
+        { "name": "Duchess Von Bun", "time": 78.44 },
+        { "name": "Sauceless Steve", "time": 79.11 }
+      ]
+    },
+    {
+      "id": "bp-t3",
+      "name": "Ketchup or Die Trying",
+      "isBrewer": false,
+      "teamTime": 257.39,
+      "members": [
+        { "name": "Pepper Jack", "time": 78.12 },
+        { "name": "Lady Glizzy", "time": 85.61 },
+        { "name": "Hawt Soss Harriet", "time": 93.66 }
+      ]
+    },
+    {
+      "id": "bp-t4",
+      "name": "Mustard's Last Stand",
+      "isBrewer": false,
+      "teamTime": 303.21,
+      "notes": "Hotdog floor incident — finished with honor",
+      "members": []
+    },
+    {
+      "id": "bp-t5",
+      "name": "Buns of Steel",
+      "isBrewer": false,
+      "notes": "No-shows — highly suspicious",
+      "members": []
+    },
+    {
+      "id": "bp-t6",
+      "name": "The Birthday Suits",
+      "isBrewer": true,
+      "teamTime": 195.88,
+      "members": [
+        { "name": "Birthday Boy", "time": 58.33 },
+        { "name": "Party Animal Pat", "time": 67.22 },
+        { "name": "The Grill Master", "time": 70.33 }
+      ]
+    }
+  ]
+}
