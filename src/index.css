@@ -17,9 +17,16 @@
   /* Named animations — usable as animate-* Tailwind classes */
   --animate-score-flash: score-flash 0.8s ease-out forwards;
   --animate-fade-in: fade-in 0.18s ease-out both;
+  --animate-glizzy-run: glizzy-run 0.45s ease-in-out infinite;
 }
 
 /* ── Keyframes ────────────────────────────────────────────────────────────── */
+
+/* Hotdog relay timer animation */
+@keyframes glizzy-run {
+  0%, 100% { transform: rotate(-20deg) translateY(2px) scale(0.9); }
+  50%       { transform: rotate(20deg)  translateY(-14px) scale(1.15); }
+}
 
 /* Briefly highlights a scoreboard row when a new time is recorded */
 @keyframes score-flash {

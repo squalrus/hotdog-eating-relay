@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
 import AppShell from './components/AppShell'
 import Home from './pages/Home'
+import Timer from './pages/Timer'
 import Scoreboard from './pages/Scoreboard'
 import Roster from './pages/Roster'
 import EventSetup from './pages/EventSetup'
@@ -18,6 +19,7 @@ export default function App() {
           <Route element={<AppShell />}>
             <Route index element={<Home />} />
             <Route path="scoreboard" element={<Scoreboard />} />
+            <Route path="timer" element={<Timer />} />
             <Route path="roster" element={<Roster />} />
             <Route path="event" element={<EventSetup />} />
             <Route path="teams" element={<TeamManager />} />
