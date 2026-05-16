@@ -109,7 +109,7 @@ function ScoreRow({
             </span>
           )}
 
-          {prize && (
+          {prize && !isDNS && (
             <span className="text-xs font-bold bg-orange/20 text-orange px-2 py-0.5 rounded flex-shrink-0">
               {prize.description}
             </span>
@@ -159,48 +159,57 @@ function ScoreRow({
 }
 
 // ---------------------------------------------------------------------------
-// Individual leaderboard — fastest splits across all teams
+// Individual leaderboard — all named members, timed ones ranked first
 // ---------------------------------------------------------------------------
 
 interface IndividualResult {
-  key: string       // stable React key
+  key: string
   memberName: string
   teamName: string
   isBrewer: boolean
-  time: number
+  time: number | undefined  // undefined = no split recorded yet (TBD)
 }
 
 function getTopIndividuals(teams: Team[]): IndividualResult[] {
   const results: IndividualResult[] = []
   for (const team of teams) {
+    if (team.members.length !== 3) continue  // only teams with named members
     team.members.forEach((member, idx) => {
-      if (member.time != null) {
-        results.push({
-          key: `${team.id}-${idx}`,
-          memberName: member.name,
-          teamName: team.name,
-          isBrewer: team.isBrewer,
-          time: member.time,
-        })
-      }
+      results.push({
+        key: `${team.id}-${idx}`,
+        memberName: member.name,
+        teamName: team.name,
+        isBrewer: team.isBrewer,
+        time: member.time,
+      })
     })
   }
-  return results.sort((a, b) => a.time - b.time)
+  // Timed members sorted ascending; TBD members sink to the bottom
+  return results.sort((a, b) => {
+    if (a.time != null && b.time != null) return a.time - b.time
+    if (a.time != null) return -1
+    if (b.time != null) return 1
+    return 0
+  })
 }
 
 function IndividualRow({ result, rank }: { result: IndividualResult; rank: number }) {
+  const isTBD = result.time == null
   const flashing = useScoreFlash(result.time)
-  const medal = rank <= 3 ? MEDALS[rank - 1] : undefined
+  // Only award medals to members who have a recorded time
+  const medal = !isTBD && rank <= 3 ? MEDALS[rank - 1] : undefined
 
   return (
     <div
       className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2.5 ${
-        flashing ? 'animate-score-flash' : ''
+        isTBD ? 'opacity-40' : flashing ? 'animate-score-flash' : ''
       }`}
     >
-      {/* Rank / medal */}
+      {/* Rank / medal / TBD */}
       <div className="w-10 sm:w-14 flex-shrink-0 flex items-center justify-center">
-        {medal ? (
+        {isTBD ? (
+          <span className="text-xs font-bold text-cream/20 uppercase tracking-wide">TBD</span>
+        ) : medal ? (
           <span className="text-xl leading-none">{medal.emoji}</span>
         ) : (
           <span className="font-display text-lg text-cream/30">{rank}.</span>
@@ -221,10 +230,10 @@ function IndividualRow({ result, rank }: { result: IndividualResult; rank: numbe
       {/* Time */}
       <span
         className={`font-mono tabular-nums text-sm sm:text-base flex-shrink-0 ${
-          medal ? medal.textClass : 'text-cream/55'
+          isTBD ? 'text-cream/20' : medal ? medal.textClass : 'text-cream/55'
         }`}
       >
-        {formatTime(result.time)}
+        {isTBD ? '—' : formatTime(result.time!)}
       </span>
     </div>
   )
@@ -237,7 +246,7 @@ function IndividualLeaderboard({ teams }: { teams: Team[] }) {
     return (
       <div className="flex-1 flex items-center justify-center px-6 py-10 text-center">
         <p className="text-cream/20 text-xs leading-relaxed max-w-[180px]">
-          Individual splits appear here when member times are recorded in Results Entry
+          Name members in Team Manager to track individual splits
         </p>
       </div>
     )
@@ -365,6 +374,9 @@ export default function Scoreboard() {
           {(() => {
             const { eligible, brewers } = rankTeams(activeEvent.teams)
             const prizes = activeEvent.prizes
+            const hasIndividualTimes = activeEvent.teams.some((t) =>
+              t.members.some((m) => m.time != null),
+            )
 
             return (
               <div className="flex-1 flex flex-col lg:flex-row min-h-0">
@@ -428,21 +440,21 @@ export default function Scoreboard() {
                   </div>
                 </div>
 
-                {/* ── RIGHT: Individual leaderboard (≈1/3 on desktop) ── */}
-                <div className="lg:w-1/3 lg:flex-shrink-0 flex flex-col border-t border-white/8 lg:border-t-0 lg:border-l lg:border-white/8">
-                  {/* Panel header */}
-                  <div className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-1.5 border-b border-white/5">
-                    <div className="w-10 sm:w-14 flex-shrink-0" />
-                    <div className="flex-1 text-xs font-bold text-cream/25 uppercase tracking-widest">
-                      ⚡ Individual
+                {/* ── RIGHT: Individual leaderboard — hidden until at least one split exists */}
+                {hasIndividualTimes && (
+                  <div className="lg:w-1/3 lg:flex-shrink-0 flex flex-col border-t border-white/8 lg:border-t-0 lg:border-l lg:border-white/8">
+                    <div className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-1.5 border-b border-white/5">
+                      <div className="w-10 sm:w-14 flex-shrink-0" />
+                      <div className="flex-1 text-xs font-bold text-cream/25 uppercase tracking-widest">
+                        ⚡ Individual
+                      </div>
+                      <div className="text-xs font-bold text-cream/25 uppercase tracking-widest">
+                        Time
+                      </div>
                     </div>
-                    <div className="text-xs font-bold text-cream/25 uppercase tracking-widest">
-                      Time
-                    </div>
+                    <IndividualLeaderboard teams={activeEvent.teams} />
                   </div>
-
-                  <IndividualLeaderboard teams={activeEvent.teams} />
-                </div>
+                )}
 
               </div>
             )
