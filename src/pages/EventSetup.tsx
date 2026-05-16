@@ -391,51 +391,50 @@ function EventCard({ event, isShown, dispatch }: {
 
         {/* Status + actions row */}
         <div className="flex items-center gap-2 flex-wrap pt-1">
-          {/* Status switcher */}
-          {event.status !== 'archived' ? (
-            <div className="flex gap-1">
-              <button
-                onClick={() => setStatus('upcoming')}
-                disabled={event.status === 'upcoming'}
-                className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border-2 transition-colors ${
-                  event.status === 'upcoming'
-                    ? 'border-olive bg-olive/20 text-olive-dark cursor-default'
-                    : 'border-olive/30 text-dark/50 hover:border-olive hover:text-dark'
-                }`}
-              >
-                {STATUS_LABEL.upcoming}
-              </button>
-              <button
-                onClick={() => setStatus('active')}
-                disabled={event.status === 'active'}
-                className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border-2 transition-colors ${
-                  event.status === 'active'
-                    ? 'border-green-600 bg-green-50 text-green-800 cursor-default'
-                    : 'border-green-600/30 text-dark/50 hover:border-green-600 hover:text-dark'
-                }`}
-              >
-                {STATUS_LABEL.active}
-              </button>
-              <button
-                onClick={() => setStatus('archived')}
-                className="text-xs font-bold px-2.5 py-1.5 rounded-lg border-2 border-dark/20 text-dark/40 hover:border-dark/40 hover:text-dark transition-colors flex items-center gap-1"
-              >
-                <Archive size={11} /> Archive
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-dark/40 bg-dark/8 px-2.5 py-1.5 rounded-lg">
-                {STATUS_LABEL.archived}
-              </span>
+          {/* Status switcher — all three always available so any state can be reversed */}
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => setStatus('upcoming')}
+              disabled={event.status === 'upcoming'}
+              className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border-2 transition-colors ${
+                event.status === 'upcoming'
+                  ? 'border-olive bg-olive/20 text-olive-dark cursor-default'
+                  : 'border-olive/30 text-dark/50 hover:border-olive hover:text-dark'
+              }`}
+            >
+              {STATUS_LABEL.upcoming}
+            </button>
+            <button
+              onClick={() => setStatus('active')}
+              disabled={event.status === 'active'}
+              className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border-2 transition-colors ${
+                event.status === 'active'
+                  ? 'border-green-600 bg-green-50 text-green-800 cursor-default'
+                  : 'border-green-600/30 text-dark/50 hover:border-green-600 hover:text-dark'
+              }`}
+            >
+              {STATUS_LABEL.active}
+            </button>
+            <button
+              onClick={() => setStatus('archived')}
+              disabled={event.status === 'archived'}
+              className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border-2 transition-colors flex items-center gap-1 ${
+                event.status === 'archived'
+                  ? 'border-dark/20 bg-dark/8 text-dark/40 cursor-default'
+                  : 'border-dark/20 text-dark/40 hover:border-dark/40 hover:text-dark'
+              }`}
+            >
+              <Archive size={11} /> {STATUS_LABEL.archived}
+            </button>
+            {event.status === 'archived' && (
               <button
                 onClick={() => exportEventJSON(event)}
                 className="text-xs font-bold px-2.5 py-1.5 rounded-lg border-2 border-olive/40 text-olive hover:border-olive transition-colors flex items-center gap-1"
               >
                 <Download size={11} /> Download JSON
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Edit toggle */}
           <button

@@ -19,10 +19,17 @@ const displayLinks: NavItem[] = [
 
 const adminLinks: NavItem[] = [
   { to: '/event', label: '⚙️ Event', end: false },
-  { to: '/teams', label: '🌭 Teams', end: false },
-  { to: '/results', label: '⏱ Results', end: false },
-  { to: '/prizes', label: '🥇 Prizes', end: false },
   { to: '/history', label: '📅 History', end: false },
+]
+
+// Routes that belong to the event management hub
+const EVENT_MGMT_ROUTES = ['/event', '/teams', '/results', '/prizes']
+
+const eventMgmtLinks = [
+  { to: '/event',   label: '⚙️ Setup' },
+  { to: '/teams',   label: '🌭 Teams' },
+  { to: '/results', label: '⏱ Results' },
+  { to: '/prizes',  label: '🥇 Prizes' },
 ]
 
 function NavItems({ links }: { links: NavItem[] }) {
@@ -167,6 +174,35 @@ export default function AppShell() {
           </div>
         )}
       </div>
+
+      {/* ── Event management sub-nav ────────────────────────────────────── */}
+      {EVENT_MGMT_ROUTES.includes(location.pathname) && !navHidden && (
+        <div className="bg-cream-dark border-b border-olive/20 px-4 overflow-x-auto no-print">
+          <div className="flex items-center min-w-max">
+            {activeEvent && (
+              <span className="text-xs text-dark/35 font-semibold pr-3 border-r border-olive/20 mr-1 py-2 flex-shrink-0 hidden sm:block">
+                {activeEvent.name}
+              </span>
+            )}
+            {eventMgmtLinks.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end
+                className={({ isActive }) =>
+                  `px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
+                    isActive
+                      ? 'text-dark border-orange'
+                      : 'text-dark/45 border-transparent hover:text-dark hover:border-dark/20'
+                  }`
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </div>
+        </div>
+      )}
 
       {navHidden && (
         <button
