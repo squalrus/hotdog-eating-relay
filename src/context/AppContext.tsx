@@ -21,7 +21,7 @@ import { loadData, saveData, STORAGE_KEY } from '../lib/storage'
 // Action types
 // ---------------------------------------------------------------------------
 
-type Action =
+export type Action =
   | { type: 'SYNC'; data: AppData }
   | { type: 'CREATE_EVENT'; event: HotdogEvent }
   | { type: 'UPDATE_EVENT'; id: string; patch: Partial<Omit<HotdogEvent, 'id' | 'teams' | 'sponsors' | 'prizes' | 'status'>> }

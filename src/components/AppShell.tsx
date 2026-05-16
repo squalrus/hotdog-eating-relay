@@ -59,16 +59,15 @@ export default function AppShell() {
     ? new Date(activeEvent.date).getUTCFullYear().toString()
     : null
 
-  const subtitle = activeEvent
-    ? `${activeEvent.venue} · ${activeEvent.context}`
-    : 'No active event'
-
   // Dynamic document title
   useEffect(() => {
-    document.title = eventYear
-      ? `Glizzy Relay ${eventYear}`
-      : 'Glizzy Relay'
+    document.title = eventYear ? `Glizzy Relay ${eventYear}` : 'Glizzy Relay'
   }, [eventYear])
+
+  // Google Analytics — fires a page_view on every route change
+  useEffect(() => {
+    window.gtag?.('event', 'page_view', { page_path: location.pathname })
+  }, [location.pathname])
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -84,7 +83,6 @@ export default function AppShell() {
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
 
-  // ESC restores hidden nav (browser handles fullscreen ESC separately)
   useEffect(() => {
     if (!navHidden) return
     const handler = (e: KeyboardEvent) => {
@@ -96,24 +94,15 @@ export default function AppShell() {
 
   return (
     <div className={`flex flex-col ${isTimerPage ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
-      {/* Hidden in print — decorative chrome */}
       <CheckerboardStripe className="no-print" />
 
+      {/* ── Header: brand only ──────────────────────────────────────────── */}
       <header className="bg-dark text-cream px-4 py-2 sm:py-3 flex items-center gap-3 no-print">
         <span className="text-4xl leading-none select-none">🌭</span>
-        <div className="flex-1 min-w-0">
-          <h1 className="font-display text-2xl sm:text-3xl text-orange leading-none tracking-wide truncate">
-            Glizzy Relay
-          </h1>
-          <p className="text-xs text-cream/60 mt-0.5 truncate">{subtitle}</p>
-        </div>
-
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {eventYear && (
-            <span className="bg-olive text-cream text-xs font-bold px-2 py-1 rounded">
-              {eventYear}
-            </span>
-          )}
+        <h1 className="flex-1 font-display text-2xl sm:text-3xl text-orange leading-none tracking-wide">
+          Glizzy Relay
+        </h1>
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setNavHidden((v) => !v)}
             title={navHidden ? 'Show navigation (Esc)' : 'Hide navigation for presentation'}
@@ -131,6 +120,7 @@ export default function AppShell() {
         </div>
       </header>
 
+      {/* ── Nav ─────────────────────────────────────────────────────────── */}
       {!navHidden && (
         <nav className="bg-dark-light border-b border-olive/40 px-4 overflow-x-auto no-print">
           <div className="flex items-stretch min-w-max">
@@ -145,14 +135,38 @@ export default function AppShell() {
         </nav>
       )}
 
-      {!activeEvent && (
-        <div className="bg-orange/10 border-b border-orange/20 px-4 py-2 text-sm text-center no-print">
-          <span className="text-orange/80">No active event — </span>
-          <Link to="/event" className="text-orange font-semibold underline underline-offset-2">
-            set one up in Event Setup
-          </Link>
-        </div>
-      )}
+      {/* ── Event info bar — always present, replaces both old banners ──── */}
+      <div className="no-print">
+        {activeEvent ? (
+          <div className="bg-dark/60 border-b border-white/8 px-4 py-1.5 flex items-center gap-2 text-xs">
+            <span className="font-semibold text-cream truncate">{activeEvent.name}</span>
+            {activeEvent.venue && (
+              <>
+                <span className="text-cream/30">·</span>
+                <span className="text-cream/50 truncate hidden sm:inline">{activeEvent.venue}</span>
+              </>
+            )}
+            <span className="ml-auto flex-shrink-0">
+              {activeEvent.status === 'active' && (
+                <span className="text-green-400 font-bold">● Active</span>
+              )}
+              {activeEvent.status === 'upcoming' && (
+                <span className="text-olive-light font-bold">● Upcoming</span>
+              )}
+              {activeEvent.status === 'archived' && (
+                <span className="text-cream/30 font-bold">Archived</span>
+              )}
+            </span>
+          </div>
+        ) : (
+          <div className="bg-orange/10 border-b border-orange/20 px-4 py-1.5 text-xs text-center">
+            <span className="text-orange/80">No active event — </span>
+            <Link to="/event" className="text-orange font-semibold underline underline-offset-2">
+              set one up in Event Setup
+            </Link>
+          </div>
+        )}
+      </div>
 
       {navHidden && (
         <button
@@ -164,7 +178,6 @@ export default function AppShell() {
         </button>
       )}
 
-      {/* key on pathname triggers remount → re-runs fade-in animation on every navigation */}
       <main key={location.pathname} className={`flex-1 animate-fade-in ${isTimerPage ? 'overflow-hidden' : 'p-4 sm:p-6'}`}>
         <Outlet />
       </main>
