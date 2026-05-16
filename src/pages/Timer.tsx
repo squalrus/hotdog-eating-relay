@@ -89,6 +89,7 @@ export default function Timer() {
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [applied, setApplied] = useState(false)
   const [celebrating, setCelebrating] = useState(false)
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
 
   const phase = Math.min(timestamps.length, 4)
   const isRunning = phase >= 1 && phase < 4
@@ -104,6 +105,43 @@ export default function Timer() {
     }
     id = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(id)
+  }, [isRunning])
+
+  // Screen wake lock — keeps the display on while the timer is running
+  useEffect(() => {
+    async function acquire() {
+      if (!('wakeLock' in navigator)) return
+      try {
+        wakeLockRef.current = await navigator.wakeLock.request('screen')
+      } catch {
+        // Wake lock denied (e.g. low battery) — non-critical, timer still works
+      }
+    }
+
+    function release() {
+      wakeLockRef.current?.release()
+      wakeLockRef.current = null
+    }
+
+    if (isRunning) {
+      acquire()
+    } else {
+      release()
+    }
+
+    // The browser releases the lock automatically when the tab loses visibility.
+    // Re-acquire it when the page becomes visible again while the timer is still running.
+    function handleVisibility() {
+      if (document.visibilityState === 'visible' && isRunning) {
+        acquire()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      release()
+    }
   }, [isRunning])
 
   // Trigger hotdog celebration on finish
